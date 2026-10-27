@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>আমার হিসাব</title>
+<style>
+:root{--bg:#f3f6f1;--card:#fff;--ink:#1d2a22;--mut:#6b7a70;--line:#dfe6dd;--g:#1f6b4a;--gl:#e1f0e8;--r:#b3402f;--rl:#f7e3df;--a:#b07d1c;--al:#f6ecd2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a15;--card:#1b261f;--ink:#e7efe9;--mut:#93a499;--line:#2c3a31;--g:#57c08f;--gl:#1f3a2c;--r:#ef8a7a;--rl:#3d2420;--a:#e0b050;--al:#3a3118}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hind Siliguri","Noto Sans Bengali","Kalpurush",system-ui,sans-serif;font-size:16px}
+body{max-width:520px;margin:0 auto;padding:14px 14px 90px}
+h1{font-size:22px;margin:4px 0 12px}h2{font-size:17px;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center}.sp{justify-content:space-between}
+.mut{color:var(--mut);font-size:13px}
+button,input,select{font:inherit;color:inherit}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);margin-top:4px}
+label{display:block;margin-top:10px;font-size:14px;color:var(--mut)}
+.btn{background:var(--g);color:#fff;border:0;border-radius:10px;padding:12px 16px;width:100%;margin-top:14px;font-weight:600}
+.btn.o{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;margin-top:6px}
+.seg button{flex:1;border:0;background:transparent;padding:9px 4px;border-radius:8px;color:var(--mut)}
+.seg button.on{background:var(--g);color:#fff}
+.seg.out button.on{background:var(--r)}
+.num{font-size:21px;font-weight:700}.in{color:var(--g)}.ex{color:var(--r)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.box{border-radius:12px;padding:10px 12px}
+.bar{height:8px;border-radius:4px;background:var(--line);margin-top:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--r)}
+.item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border:0}
+.x{border:0;background:none;color:var(--mut);font-size:20px;padding:0 6px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav div{display:flex;width:100%;max-width:520px}
+nav button{flex:1;border:0;background:none;padding:13px 4px;color:var(--mut);font-weight:600}
+nav button.on{color:var(--g);box-shadow:inset 0 3px 0 var(--g)}
+.pf{display:flex;justify-content:space-between;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--card);width:100%;text-align:left}
+.empty{text-align:center;color:var(--mut);padding:22px 0}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+var KEY="hisab_v1",S={profiles:[],cur:null},tab="home",month=new Date().toISOString().slice(0,7);
+var F={w:"p",t:"out",c:"",a:"",d:new Date().toISOString().slice(0,10),n:""};
+var CATS={pin:["বেতন","টিউশন","হাদিয়া/গিফট","অন্যান্য আয়"],pout:["পরিবার","নিজের জন্য","যাতায়াত","অন্যান্য"],fin:["প্রতিষ্ঠান থেকে প্রাপ্তি"],fout:["নাস্তা","রাস্তা/যাতায়াত","অন্যান্য"]};
+function load(){try{var r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}}
+function saveLocal(){try{localStorage.setItem(lk(),JSON.stringify(S))}catch(e){alert("ডেটা সেভ করা যায়নি। ব্রাউজারের স্টোরেজ বন্ধ থাকতে পারে।")}}
+/* ===== Firebase সেটিং: নিচের ৪টি মান নিজের প্রজেক্টের কোড দিয়ে বদলান ===== */
+var cfg={apiKey:"AIzaSyCEi9jzJ3plTbpcqGDzatnYlTzhbOhUJE0",authDomain:"abdurrahmanjamii.firebaseapp.com",projectId:"abdurrahmanjamii",appId:"1:872713119272:web:addd0fb1039fa7ed8d371d"};
+var cloud=cfg.apiKey.indexOf("YOUR")<0,user=null,db=null,auth=null,ready=false,st="",old=null;
+function lk(){return user?KEY+"_"+user.uid:KEY}
+function save(){saveLocal();if(user&&db){st="সেভ হচ্ছে…";hint();db.collection("users").doc(user.uid).set({d:JSON.stringify({profiles:S.profiles}),t:Date.now()}).then(function(){st="☁ ক্লাউডে সেভ হয়েছে";hint()}).catch(function(){st="⚠ ক্লাউডে সেভ হয়নি, নেট চেক করুন";hint()})}}
+function hint(){var e=document.getElementById("st");if(e)e.textContent=st}
+function readLocal(){try{var r=localStorage.getItem(lk());return r?JSON.parse(r).profiles||[]:[]}catch(e){return[]}}
+function initCloud(){
+  if(!cloud)return;old=S.profiles.length?S.profiles:null;
+  try{firebase.initializeApp(cfg);auth=firebase.auth();db=firebase.firestore()}catch(e){alert("Firebase সেটিং ঠিক নেই");return}
+  auth.onAuthStateChanged(function(u){
+    user=u;ready=false;
+    if(!u){S={profiles:[],cur:null};render();return}
+    render();
+    db.collection("users").doc(u.uid).get().then(function(doc){
+      if(doc.exists){S={profiles:JSON.parse(doc.data().d).profiles||[],cur:null};saveLocal()}
+      else{S={profiles:(old&&confirm("এই ফোনে আগের হিসাব আছে। এটা এই গুগল অ্যাকাউন্টে তুলবেন?"))?old:[],cur:null};save()}
+      ready=true;render();
+    }).catch(function(){S={profiles:readLocal(),cur:null};ready=true;render()});
+  });
+}
+function loginScr(){return '<h1>আমার হিসাব</h1><div class="card"><p>গুগল অ্যাকাউন্ট দিয়ে ঢুকুন। আপনার হিসাব আপনার অ্যাকাউন্টে জমা থাকবে, ফোন বদলালেও নতুন ফোনে ঢুকলেই ফেরত পাবেন। প্রত্যেকের হিসাব আলাদা।</p><button class="btn" onclick="gin()">গুগল দিয়ে সাইন-ইন করুন</button></div>'}
+function gin(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){alert("সাইন-ইন হয়নি: "+e.code)})}
+function acct(){return cloud&&user?'<div class="card"><b>'+esc(user.displayName||"")+'</b><div class="mut">'+esc(user.email||"")+'</div><div class="mut" id="st">'+st+'</div><button class="btn o" onclick="auth.signOut()">সাইন-আউট</button></div>':!cloud?'<div class="card mut">ক্লাউড চালু নেই, ডেটা শুধু এই ফোনে জমা হচ্ছে।</div>':''}
+function me(){return S.profiles.find(function(p){return p.id===S.cur})}
+function bn(n){return Number(n||0).toLocaleString("bn-BD")}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function cats(){return CATS[F.w+F.t]}
+function render(){
+  var el=document.getElementById("app");
+  if(cloud&&!user){el.innerHTML=loginScr();return}
+  if(cloud&&!ready){el.innerHTML='<div class="empty">লোড হচ্ছে…</div>';return}
+  if(!me()){el.innerHTML=profiles();return}
+  var h='<div class="row sp"><h1>'+esc(me().name)+' এর হিসাব</h1><button class="x" onclick="logout()" title="প্রোফাইল বদলান">⇄</button></div>';
+  h+=tab==="home"?home():tab==="add"?add():tab==="list"?list():more();
+  h+='<nav><div><button class="'+(tab==="home"?"on":"")+'" onclick="go(\'home\')">সারসংক্ষেপ</button><button class="'+(tab==="add"?"on":"")+'" onclick="go(\'add\')">নতুন এন্ট্রি</button><button class="'+(tab==="list"?"on":"")+'" onclick="go(\'list\')">তালিকা</button><button class="'+(tab==="more"?"on":"")+'" onclick="go(\'more\')">ব্যাকআপ</button></div></nav>';
+  el.innerHTML=h;
+}
+function go(t){tab=t;render();window.scrollTo(0,0)}
+function profiles(){
+  var h='<h1>কে ব্যবহার করছেন?</h1><p class="mut">প্রত্যেকের হিসাব আলাদা থাকে। সব ডেটা শুধু এই ফোনেই জমা হয়।</p>';
+  S.profiles.forEach(function(p){h+='<button class="pf" onclick="pick(\''+p.id+'\')"><b>'+esc(p.name)+'</b><span class="mut">'+bn(p.entries.length)+' টি এন্ট্রি</span></button>'});
+  h+='<div class="card"><label>নতুন নাম যোগ করুন</label><input id="pn" placeholder="যেমন: আব্দুল্লাহ"><button class="btn" onclick="addProf()">প্রোফাইল তৈরি করুন</button></div>';
+  return h;
+}
+function addProf(){var v=document.getElementById("pn").value.trim();if(!v)return alert("নাম লিখুন");var p={id:"p"+Date.now(),name:v,entries:[]};S.profiles.push(p);S.cur=p.id;save();render()}
+function pick(id){S.cur=id;save();render()}
+function logout(){S.cur=null;save();render()}
+function monthBar(){
+  return '<div class="row sp"><button class="x" onclick="mv(-1)">‹</button><b>'+new Date(month+"-01").toLocaleDateString("bn-BD",{month:"long",year:"numeric"})+'</b><button class="x" onclick="mv(1)">›</button></div>';
+}
+function mv(d){var x=new Date(month+"-01");x.setMonth(x.getMonth()+d);month=x.toISOString().slice(0,7);render()}
+function sum(es,w,t){return es.filter(function(e){return e.w===w&&e.t===t}).reduce(function(s,e){return s+e.a},0)}
+function home(){
+  var all=me().entries,es=all.filter(function(e){return e.d.slice(0,7)===month});
+  var pi=sum(es,"p","in"),po=sum(es,"p","out"),fi=sum(all,"f","in"),fo=sum(all,"f","out"),fmi=sum(es,"f","in"),fmo=sum(es,"f","out");
+  var h=monthBar()+'<h2>ব্যক্তিগত</h2><div class="card"><div class="grid"><div class="box" style="background:var(--gl)"><div class="mut">আয়</div><div class="num in">৳'+bn(pi)+'</div></div><div class="box" style="background:var(--rl)"><div class="mut">খরচ</div><div class="num ex">৳'+bn(po)+'</div></div></div><div class="row sp" style="margin-top:12px"><span>এ মাসের সঞ্চয়</span><b class="'+(pi-po>=0?"in":"ex")+'">৳'+bn(pi-po)+'</b></div></div>';
+  var tot=po||1,bk="";
+  CATS.pout.forEach(function(c){var v=es.filter(function(e){return e.w==="p"&&e.t==="out"&&e.c===c}).reduce(function(s,e){return s+e.a},0);if(v)bk+='<div style="margin-top:10px"><div class="row sp"><span>'+esc(c)+'</span><span>৳'+bn(v)+'</span></div><div class="bar"><i style="width:'+Math.round(v/tot*100)+'%"></i></div></div>'});
+  if(bk)h+='<div class="card"><b>খরচ কোথায় গেল</b>'+bk+'</div>';
+  h+='<h2>প্রতিষ্ঠান ফান্ড</h2><div class="card" style="background:var(--al)"><div class="mut">বর্তমান বাকি (আমানত)</div><div class="num" style="color:var(--a)">৳'+bn(fi-fo)+'</div><div class="mut" style="margin-top:8px">এ মাসে পেয়েছি ৳'+bn(fmi)+' · খরচ করেছি ৳'+bn(fmo)+'</div></div>';
+  h+='<button class="btn o" onclick="report()">প্রতিষ্ঠান ফান্ডের রিপোর্ট দেখুন / প্রিন্ট করুন</button>';
+  return h;
+}
+function add(){
+  if(cats().indexOf(F.c)<0)F.c=cats()[0];
+  var h='<div class="card"><label>কোন হিসাব?</label><div class="seg"><button class="'+(F.w==="p"?"on":"")+'" onclick="sf(\'w\',\'p\')">ব্যক্তিগত</button><button class="'+(F.w==="f"?"on":"")+'" onclick="sf(\'w\',\'f\')">প্রতিষ্ঠান ফান্ড</button></div>';
+  h+='<div class="seg '+(F.t==="out"?"out":"")+'"><button class="'+(F.t==="in"?"on":"")+'" onclick="sf(\'t\',\'in\')">'+(F.w==="p"?"আয়":"টাকা পেলাম")+'</button><button class="'+(F.t==="out"?"on":"")+'" onclick="sf(\'t\',\'out\')">খরচ</button></div>';
+  h+='<label>ক্যাটাগরি</label><select onchange="F.c=this.value">'+cats().map(function(c){return'<option'+(c===F.c?" selected":"")+'>'+esc(c)+'</option>'}).join("")+'</select>';
+  h+='<label>টাকার পরিমাণ</label><input id="fa" type="number" inputmode="decimal" min="0" placeholder="0" value="'+esc(F.a)+'">';
+  h+='<label>তারিখ</label><input id="fd" type="date" value="'+F.d+'">';
+  h+='<label>বিবরণ: কী কিনলেন বা কার কাছ থেকে পেলেন (ঐচ্ছিক)</label><input id="fn" placeholder="যেমন: ১ কেজি আলু, বন্ধুর হাদিয়া" value="'+esc(F.n)+'">';
+  return h+'<button class="btn" onclick="submit()">সংরক্ষণ করুন</button></div>';
+}
+function sf(k,v){keep();F[k]=v;render()}
+function keep(){var a=document.getElementById("fa");if(a){F.a=a.value;F.d=document.getElementById("fd").value;F.n=document.getElementById("fn").value}}
+function submit(){
+  keep();var a=parseFloat(F.a);
+  if(!(a>0))return alert("সঠিক টাকার পরিমাণ লিখুন");
+  if(!F.d)return alert("তারিখ দিন");
+  me().entries.push({id:"e"+Date.now(),w:F.w,t:F.t,c:F.c,a:a,d:F.d,n:F.n.trim()});
+  F.a="";F.n="";save();tab="list";month=F.d.slice(0,7);render();
+}
+function list(){
+  var es=me().entries.filter(function(e){return e.d.slice(0,7)===month}).sort(function(a,b){return b.d.localeCompare(a.d)||b.id.localeCompare(a.id)});
+  var h=monthBar()+'<div class="card" style="margin-top:10px">';
+  if(!es.length)h+='<div class="empty">এ মাসে কোনো এন্ট্রি নেই।<br>“নতুন এন্ট্রি” থেকে যোগ করুন।</div>';
+  es.forEach(function(e){h+='<div class="item"><div><b>'+esc(e.n||e.c)+'</b><div class="mut">'+(e.n?esc(e.c)+" · ":"")+(e.w==="f"?"ফান্ড · ":"")+new Date(e.d).toLocaleDateString("bn-BD",{day:"numeric",month:"short"})+'</div></div><div class="row"><b class="'+(e.t==="in"?"in":"ex")+'">'+(e.t==="in"?"+":"−")+'৳'+bn(e.a)+'</b><button class="x" onclick="del(\''+e.id+'\')">×</button></div></div>'});
+  return h+'</div>';
+}
+function del(id){if(!confirm("এই এন্ট্রি মুছে ফেলবেন?"))return;var p=me();p.entries=p.entries.filter(function(e){return e.id!==id});save();render()}
+function more(){
+  return acct()+'<div class="card"><b>ডেটা ব্যাকআপ</b><p class="mut">ডেটা শুধু এই ব্রাউজারে থাকে। ব্রাউজারের ডেটা মুছলে হারিয়ে যাবে, তাই নিয়মিত ব্যাকআপ নিন।</p><button class="btn" onclick="exp()">সব প্রোফাইলের ব্যাকআপ নামান</button><label>ব্যাকআপ ফাইল ফেরত আনুন</label><input type="file" accept=".json" onchange="imp(this)"></div><div class="card"><b>এই প্রোফাইল</b><button class="btn o" onclick="delProf()">“'+esc(me().name)+'” প্রোফাইল মুছুন</button></div>';
+}
+function exp(){var b=new Blob([JSON.stringify(S)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="hisab-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove()}
+function imp(i){var f=i.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);if(!d.profiles)throw 0;if(!confirm("বর্তমান সব ডেটা বদলে ব্যাকআপের ডেটা বসবে। নিশ্চিত?"))return;S=d;S.cur=null;save();render()}catch(e){alert("ফাইলটি সঠিক ব্যাকআপ নয়")}};r.readAsText(f)}
+function delProf(){if(!confirm("এই প্রোফাইল ও এর সব হিসাব স্থায়ীভাবে মুছে যাবে। নিশ্চিত?"))return;S.profiles=S.profiles.filter(function(p){return p.id!==S.cur});S.cur=null;save();render()}
+function report(){
+  var es=me().entries.filter(function(e){return e.w==="f"}).sort(function(a,b){return a.d.localeCompare(b.d)}),bal=0;
+  var rows=es.map(function(e){bal+=e.t==="in"?e.a:-e.a;return"<tr><td>"+e.d+"</td><td>"+esc(e.c)+(e.n?" ("+esc(e.n)+")":"")+"</td><td>"+(e.t==="in"?e.a:"")+"</td><td>"+(e.t==="out"?e.a:"")+"</td><td>"+bal+"</td></tr>"}).join("");
+  var w=window.open("","_blank");
+  if(!w)return alert("নতুন ট্যাব খুলতে দিন, তারপর আবার চেষ্টা করুন");
+  w.document.write('<meta charset="utf-8"><title>ফান্ড রিপোর্ট</title><style>body{font-family:sans-serif;padding:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:6px;font-size:14px;text-align:left}</style><h2>প্রতিষ্ঠান ফান্ডের হিসাব — '+esc(me().name)+'</h2><table><tr><th>তারিখ</th><th>বিবরণ</th><th>প্রাপ্তি</th><th>খরচ</th><th>বাকি</th></tr>'+rows+'</table><h3>বর্তমান বাকি: ৳'+bal+'</h3><button onclick="print()">প্রিন্ট / PDF</button>');
+  w.document.close();
+}
+load();render();initCloud();
+</script>
+</body>
+</html>
