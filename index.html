@@ -10,7 +10,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a15;--card:#1b261f;--ink:#e7efe9;--mut:#93a499;--line:#2c3a31;--g:#57c08f;--gl:#1f3a2c;--r:#ef8a7a;--rl:#3d2420;--a:#e0b050;--al:#3a3118}}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hind Siliguri","Noto Sans Bengali","Kalpurush",system-ui,sans-serif;font-size:16px}
-body{max-width:520px;margin:0 auto;padding:14px 14px 90px}
+body{max-width:520px;margin:0 auto;padding:14px 14px 110px}
 h1{font-size:22px;margin:4px 0 12px}h2{font-size:17px;margin:18px 0 8px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
 .row{display:flex;gap:8px;align-items:center}.sp{justify-content:space-between}
@@ -31,10 +31,20 @@ label{display:block;margin-top:10px;font-size:14px;color:var(--mut)}
 .item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .item:last-child{border:0}
 .x{border:0;background:none;color:var(--mut);font-size:20px;padding:0 6px}
-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
-nav div{display:flex;width:100%;max-width:520px}
-nav button{flex:1;border:0;background:none;padding:13px 4px;color:var(--mut);font-weight:600}
-nav button.on{color:var(--g);box-shadow:inset 0 3px 0 var(--g)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));z-index:5}
+nav div{display:flex;gap:8px;max-width:520px;margin:0 auto}
+nav button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:9px 2px;color:var(--mut);font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{background:var(--g);border-color:var(--g);color:#fff}
+.cat{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.cb{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 14px;color:var(--ink)}
+.cb.on{background:var(--g);border-color:var(--g);color:#fff}
+.cb.plus{border-style:dashed;color:var(--g);font-weight:700}
+.cb span{margin-left:8px;color:var(--r);font-weight:700}.cb.on span{color:#fff}
+.lk{border:0;background:none;color:var(--g);padding:0;font-size:13px;margin-top:6px}
+.it{border-bottom:1px solid var(--line)}.it:last-child{border:0}
+.chip{display:inline-flex;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:6px 4px 6px 12px;margin:6px 6px 0 0}
+.chip button{border:0;background:none;color:var(--r);font-size:18px;line-height:1;padding:0 8px}
 .pf{display:flex;justify-content:space-between;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--card);width:100%;text-align:left}
 .empty{text-align:center;color:var(--mut);padding:22px 0}
 </style>
@@ -47,28 +57,30 @@ nav button.on{color:var(--g);box-shadow:inset 0 3px 0 var(--g)}
 <script>
 var KEY="hisab_v1",S={profiles:[],cur:null},tab="home",month=new Date().toISOString().slice(0,7);
 var F={w:"p",t:"out",c:"",a:"",d:new Date().toISOString().slice(0,10),n:""};
-var CATS={pin:["বেতন","টিউশন","হাদিয়া/গিফট","অন্যান্য আয়"],pout:["পরিবার","নিজের জন্য","যাতায়াত","অন্যান্য"],fin:["প্রতিষ্ঠান থেকে প্রাপ্তি"],fout:["নাস্তা","রাস্তা/যাতায়াত","অন্যান্য"]};
+var CATS={pin:["মাদ্রাসার বেতন","টিউশন","হাদিয়া"],pout:["পরিবার","নিজের জন্য","যাতায়াত"],fin:["প্রতিষ্ঠান থেকে প্রাপ্তি"],fout:["নাস্তা","রাস্তা/যাতায়াত"]};
 function load(){try{var r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}}
 function saveLocal(){try{localStorage.setItem(lk(),JSON.stringify(S))}catch(e){alert("ডেটা সেভ করা যায়নি। ব্রাউজারের স্টোরেজ বন্ধ থাকতে পারে।")}}
 /* ===== Firebase সেটিং: নিচের ৪টি মান নিজের প্রজেক্টের কোড দিয়ে বদলান ===== */
 var cfg={apiKey:"AIzaSyCEi9jzJ3plTbpcqGDzatnYlTzhbOhUJE0",authDomain:"abdurrahmanjamii.firebaseapp.com",projectId:"abdurrahmanjamii",appId:"1:872713119272:web:addd0fb1039fa7ed8d371d"};
-var cloud=cfg.apiKey.indexOf("YOUR")<0,user=null,db=null,auth=null,ready=false,st="",old=null;
+var cloud=cfg.apiKey.indexOf("YOUR")<0,user=null,db=null,auth=null,ready=false,authReady=false,st="",old=null;
 function lk(){return user?KEY+"_"+user.uid:KEY}
 function save(){saveLocal();if(user&&db){st="সেভ হচ্ছে…";hint();db.collection("users").doc(user.uid).set({d:JSON.stringify({profiles:S.profiles}),t:Date.now()}).then(function(){st="☁ ক্লাউডে সেভ হয়েছে";hint()}).catch(function(){st="⚠ ক্লাউডে সেভ হয়নি, নেট চেক করুন";hint()})}}
 function hint(){var e=document.getElementById("st");if(e)e.textContent=st}
 function readLocal(){try{var r=localStorage.getItem(lk());return r?JSON.parse(r).profiles||[]:[]}catch(e){return[]}}
+function lastCur(){try{var r=localStorage.getItem(lk());return r?JSON.parse(r).cur:null}catch(e){return null}}
+function setCur(){var c=S.cur;if(!S.profiles.some(function(p){return p.id===c}))c=S.profiles.length===1?S.profiles[0].id:null;S.cur=c}
 function initCloud(){
   if(!cloud)return;old=S.profiles.length?S.profiles:null;
-  try{firebase.initializeApp(cfg);auth=firebase.auth();db=firebase.firestore()}catch(e){alert("Firebase সেটিং ঠিক নেই");return}
+  try{firebase.initializeApp(cfg);auth=firebase.auth();db=firebase.firestore();auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){})}catch(e){alert("Firebase সেটিং ঠিক নেই");authReady=true;render();return}
   auth.onAuthStateChanged(function(u){
-    user=u;ready=false;
+    user=u;ready=false;authReady=true;
     if(!u){S={profiles:[],cur:null};render();return}
-    render();
+    var c=lastCur();render();
     db.collection("users").doc(u.uid).get().then(function(doc){
-      if(doc.exists){S={profiles:JSON.parse(doc.data().d).profiles||[],cur:null};saveLocal()}
-      else{S={profiles:(old&&confirm("এই ফোনে আগের হিসাব আছে। এটা এই গুগল অ্যাকাউন্টে তুলবেন?"))?old:[],cur:null};save()}
-      ready=true;render();
-    }).catch(function(){S={profiles:readLocal(),cur:null};ready=true;render()});
+      if(doc.exists){S={profiles:JSON.parse(doc.data().d).profiles||[],cur:c}}
+      else{S={profiles:(old&&confirm("এই ফোনে আগের হিসাব আছে। এটা এই গুগল অ্যাকাউন্টে তুলবেন?"))?old:[],cur:c}}
+      setCur();ready=true;if(doc.exists)saveLocal();else save();render();
+    }).catch(function(){S={profiles:readLocal(),cur:c};setCur();ready=true;render()});
   });
 }
 function loginScr(){return '<h1>আমার হিসাব</h1><div class="card"><p>গুগল অ্যাকাউন্ট দিয়ে ঢুকুন। আপনার হিসাব আপনার অ্যাকাউন্টে জমা থাকবে, ফোন বদলালেও নতুন ফোনে ঢুকলেই ফেরত পাবেন। প্রত্যেকের হিসাব আলাদা।</p><button class="btn" onclick="gin()">গুগল দিয়ে সাইন-ইন করুন</button></div>'}
@@ -77,15 +89,31 @@ function acct(){return cloud&&user?'<div class="card"><b>'+esc(user.displayName|
 function me(){return S.profiles.find(function(p){return p.id===S.cur})}
 function bn(n){return Number(n||0).toLocaleString("bn-BD")}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function cats(){return CATS[F.w+F.t]}
+function getCats(k){var p=me();if(!p.cats)p.cats={};if(!p.cats[k])p.cats[k]=CATS[k].slice();return p.cats[k]}
+function cats(){return getCats(F.w+F.t)}
+function addCat(k,n){var a=getCats(k);if(a.indexOf(n)<0)a.push(n);save()}
+function delCat(k,i){var a=getCats(k);if(a.length<2)return alert("কমপক্ষে একটি ক্যাটাগরি রাখতে হবে");if(!confirm("“"+a[i]+"” মুছবেন? আগের এন্ট্রিগুলো যেমন আছে তেমনই থাকবে।"))return;a.splice(i,1);save();render()}
+function catAdd(k){var el=document.getElementById("nc"+k),n=el.value.trim();if(!n)return;addCat(k,n);render()}
+function selCat(v){if(v!=="__new"){F.c=v;return}keep();var n=prompt("নতুন ক্যাটাগরির নাম লিখুন");if(n&&n.trim()){addCat(F.w+F.t,n.trim());F.c=n.trim()}render()}
+function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
+var IC={home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',list:'<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',add:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',cat:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><path d="M7 7h.01"/>',more:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'};
+function nb(t,l){return '<button class="'+(tab===t?"on":"")+'" onclick="go(\''+t+'\')"><svg viewBox="0 0 24 24">'+IC[t]+'</svg>'+l+'</button>'}
+function catScr(){
+  var G=[["pin","ব্যক্তিগত আয়"],["pout","ব্যক্তিগত খরচ"],["fin","প্রতিষ্ঠান ফান্ড: টাকা পাওয়া"],["fout","প্রতিষ্ঠান ফান্ড: খরচ"]];
+  return '<p class="mut">নিজের মতো ক্যাটাগরি যোগ করুন বা মুছুন।</p>'+G.map(function(g){
+    var k=g[0],chips=getCats(k).map(function(c,i){return '<span class="chip">'+esc(c)+'<button onclick="delCat(\''+k+'\','+i+')">×</button></span>'}).join("");
+    return '<div class="card"><b>'+g[1]+'</b><div>'+chips+'</div><div class="row" style="margin-top:10px"><input id="nc'+k+'" placeholder="নতুন নাম"><button class="btn" style="width:auto;margin:4px 0 0;padding:11px 16px" onclick="catAdd(\''+k+'\')">যোগ</button></div></div>'}).join("");
+}
+
 function render(){
   var el=document.getElementById("app");
+  if(cloud&&!authReady){el.innerHTML='<div class="empty">লোড হচ্ছে…</div>';return}
   if(cloud&&!user){el.innerHTML=loginScr();return}
   if(cloud&&!ready){el.innerHTML='<div class="empty">লোড হচ্ছে…</div>';return}
   if(!me()){el.innerHTML=profiles();return}
-  var h='<div class="row sp"><h1>'+esc(me().name)+' এর হিসাব</h1><button class="x" onclick="logout()" title="প্রোফাইল বদলান">⇄</button></div>';
-  h+=tab==="home"?home():tab==="add"?add():tab==="list"?list():more();
-  h+='<nav><div><button class="'+(tab==="home"?"on":"")+'" onclick="go(\'home\')">সারসংক্ষেপ</button><button class="'+(tab==="add"?"on":"")+'" onclick="go(\'add\')">নতুন এন্ট্রি</button><button class="'+(tab==="list"?"on":"")+'" onclick="go(\'list\')">তালিকা</button><button class="'+(tab==="more"?"on":"")+'" onclick="go(\'more\')">ব্যাকআপ</button></div></nav>';
+  var h='<div class="row sp"><h1>'+esc(me().name)+' এর হিসাব</h1></div>';
+  h+=tab==="home"?home():tab==="add"?add():tab==="list"?list():tab==="cat"?catScr():more();
+  h+='<nav><div>'+nb('home','সারসংক্ষেপ')+nb('add','নতুন এন্ট্রি')+nb('list','বিবরণ')+nb('more','অ্যাকাউন্ট')+'</div></nav>';
   el.innerHTML=h;
 }
 function go(t){tab=t;render();window.scrollTo(0,0)}
@@ -93,10 +121,11 @@ function profiles(){
   var h='<h1>কে ব্যবহার করছেন?</h1><p class="mut">প্রত্যেকের হিসাব আলাদা থাকে। সব ডেটা শুধু এই ফোনেই জমা হয়।</p>';
   S.profiles.forEach(function(p){h+='<button class="pf" onclick="pick(\''+p.id+'\')"><b>'+esc(p.name)+'</b><span class="mut">'+bn(p.entries.length)+' টি এন্ট্রি</span></button>'});
   h+='<div class="card"><label>নতুন নাম যোগ করুন</label><input id="pn" placeholder="যেমন: আব্দুল্লাহ"><button class="btn" onclick="addProf()">প্রোফাইল তৈরি করুন</button></div>';
+  if(cloud&&user)h+='<button class="btn o" onclick="doLogout()">লগআউট</button>';
   return h;
 }
-function addProf(){var v=document.getElementById("pn").value.trim();if(!v)return alert("নাম লিখুন");var p={id:"p"+Date.now(),name:v,entries:[]};S.profiles.push(p);S.cur=p.id;save();render()}
-function pick(id){S.cur=id;save();render()}
+function addProf(){var v=document.getElementById("pn").value.trim();if(!v)return alert("নাম লিখুন");var p={id:"p"+Date.now(),name:v,entries:[]};S.profiles.push(p);S.cur=p.id;tab="home";save();render()}
+function pick(id){S.cur=id;tab="home";save();render()}
 function logout(){S.cur=null;save();render()}
 function monthBar(){
   return '<div class="row sp"><button class="x" onclick="mv(-1)">‹</button><b>'+new Date(month+"-01").toLocaleDateString("bn-BD",{month:"long",year:"numeric"})+'</b><button class="x" onclick="mv(1)">›</button></div>';
@@ -108,20 +137,29 @@ function home(){
   var pi=sum(es,"p","in"),po=sum(es,"p","out"),fi=sum(all,"f","in"),fo=sum(all,"f","out"),fmi=sum(es,"f","in"),fmo=sum(es,"f","out");
   var h=monthBar()+'<h2>ব্যক্তিগত</h2><div class="card"><div class="grid"><div class="box" style="background:var(--gl)"><div class="mut">আয়</div><div class="num in">৳'+bn(pi)+'</div></div><div class="box" style="background:var(--rl)"><div class="mut">খরচ</div><div class="num ex">৳'+bn(po)+'</div></div></div><div class="row sp" style="margin-top:12px"><span>এ মাসের সঞ্চয়</span><b class="'+(pi-po>=0?"in":"ex")+'">৳'+bn(pi-po)+'</b></div></div>';
   var tot=po||1,bk="";
-  CATS.pout.forEach(function(c){var v=es.filter(function(e){return e.w==="p"&&e.t==="out"&&e.c===c}).reduce(function(s,e){return s+e.a},0);if(v)bk+='<div style="margin-top:10px"><div class="row sp"><span>'+esc(c)+'</span><span>৳'+bn(v)+'</span></div><div class="bar"><i style="width:'+Math.round(v/tot*100)+'%"></i></div></div>'});
+  uniq(es.filter(function(e){return e.w==="p"&&e.t==="out"}).map(function(e){return e.c})).forEach(function(c){var v=es.filter(function(e){return e.w==="p"&&e.t==="out"&&e.c===c}).reduce(function(s,e){return s+e.a},0);if(v)bk+='<div style="margin-top:10px"><div class="row sp"><span>'+esc(c)+'</span><span>৳'+bn(v)+'</span></div><div class="bar"><i style="width:'+Math.round(v/tot*100)+'%"></i></div></div>'});
   if(bk)h+='<div class="card"><b>খরচ কোথায় গেল</b>'+bk+'</div>';
   h+='<h2>প্রতিষ্ঠান ফান্ড</h2><div class="card" style="background:var(--al)"><div class="mut">বর্তমান বাকি (আমানত)</div><div class="num" style="color:var(--a)">৳'+bn(fi-fo)+'</div><div class="mut" style="margin-top:8px">এ মাসে পেয়েছি ৳'+bn(fmi)+' · খরচ করেছি ৳'+bn(fmo)+'</div></div>';
   h+='<button class="btn o" onclick="report()">প্রতিষ্ঠান ফান্ডের রিপোর্ট দেখুন / প্রিন্ট করুন</button>';
   return h;
 }
+var ED=false;
+function catPick(){
+  var a=cats(),k=F.w+F.t,h='<label>ক্যাটাগরি</label><div class="cat">';
+  a.forEach(function(c,i){h+='<button class="cb'+(c===F.c?' on':'')+'" onclick="pickCat('+i+')">'+esc(c)+(ED?'<span onclick="event.stopPropagation();delCat(\''+k+'\','+i+')">✕</span>':'')+'</button>'});
+  h+='<button class="cb plus" onclick="newCat()">＋ নতুন</button></div>';
+  return h+'<button class="lk" onclick="keep();ED=!ED;render()">'+(ED?'সম্পাদনা শেষ':'ক্যাটাগরি মুছতে চান?')+'</button>';
+}
+function pickCat(i){keep();F.c=cats()[i];render()}
+function newCat(){keep();var n=prompt("নতুন ক্যাটাগরির নাম লিখুন");if(n&&n.trim()){addCat(F.w+F.t,n.trim());F.c=n.trim()}render()}
 function add(){
   if(cats().indexOf(F.c)<0)F.c=cats()[0];
   var h='<div class="card"><label>কোন হিসাব?</label><div class="seg"><button class="'+(F.w==="p"?"on":"")+'" onclick="sf(\'w\',\'p\')">ব্যক্তিগত</button><button class="'+(F.w==="f"?"on":"")+'" onclick="sf(\'w\',\'f\')">প্রতিষ্ঠান ফান্ড</button></div>';
   h+='<div class="seg '+(F.t==="out"?"out":"")+'"><button class="'+(F.t==="in"?"on":"")+'" onclick="sf(\'t\',\'in\')">'+(F.w==="p"?"আয়":"টাকা পেলাম")+'</button><button class="'+(F.t==="out"?"on":"")+'" onclick="sf(\'t\',\'out\')">খরচ</button></div>';
-  h+='<label>ক্যাটাগরি</label><select onchange="F.c=this.value">'+cats().map(function(c){return'<option'+(c===F.c?" selected":"")+'>'+esc(c)+'</option>'}).join("")+'</select>';
+  h+=catPick();
   h+='<label>টাকার পরিমাণ</label><input id="fa" type="number" inputmode="decimal" min="0" placeholder="0" value="'+esc(F.a)+'">';
   h+='<label>তারিখ</label><input id="fd" type="date" value="'+F.d+'">';
-  h+='<label>বিবরণ: কী কিনলেন বা কার কাছ থেকে পেলেন (ঐচ্ছিক)</label><input id="fn" placeholder="যেমন: ১ কেজি আলু, বন্ধুর হাদিয়া" value="'+esc(F.n)+'">';
+  h+='<label>বিবরণ (ঐচ্ছিক): কী কিনলেন বা কার কাছ থেকে পেলেন</label><input id="fn" placeholder="যেমন: ১ কেজি আলু" value="'+esc(F.n)+'">';
   return h+'<button class="btn" onclick="submit()">সংরক্ষণ করুন</button></div>';
 }
 function sf(k,v){keep();F[k]=v;render()}
@@ -133,16 +171,35 @@ function submit(){
   me().entries.push({id:"e"+Date.now(),w:F.w,t:F.t,c:F.c,a:a,d:F.d,n:F.n.trim()});
   F.a="";F.n="";save();tab="list";month=F.d.slice(0,7);render();
 }
+var OPEN=null;
+function tog(id){OPEN=OPEN===id?null:id;render()}
 function list(){
   var es=me().entries.filter(function(e){return e.d.slice(0,7)===month}).sort(function(a,b){return b.d.localeCompare(a.d)||b.id.localeCompare(a.id)});
-  var h=monthBar()+'<div class="card" style="margin-top:10px">';
+  var pi=sum(es,"p","in"),po=sum(es,"p","out"),fi=sum(es,"f","in"),fo=sum(es,"f","out");
+  var h=monthBar()+'<div class="card" style="margin-top:10px"><div class="grid"><div class="box" style="background:var(--gl)"><div class="mut">মোট যোগ</div><div class="num in">৳'+bn(pi)+'</div></div><div class="box" style="background:var(--rl)"><div class="mut">মোট খরচ</div><div class="num ex">৳'+bn(po)+'</div></div></div><div class="mut" style="margin-top:10px">প্রতিষ্ঠান ফান্ড: পেয়েছি ৳'+bn(fi)+' · খরচ ৳'+bn(fo)+'</div></div>';
+  h+='<div class="card">';
   if(!es.length)h+='<div class="empty">এ মাসে কোনো এন্ট্রি নেই।<br>“নতুন এন্ট্রি” থেকে যোগ করুন।</div>';
-  es.forEach(function(e){h+='<div class="item"><div><b>'+esc(e.n||e.c)+'</b><div class="mut">'+(e.n?esc(e.c)+" · ":"")+(e.w==="f"?"ফান্ড · ":"")+new Date(e.d).toLocaleDateString("bn-BD",{day:"numeric",month:"short"})+'</div></div><div class="row"><b class="'+(e.t==="in"?"in":"ex")+'">'+(e.t==="in"?"+":"−")+'৳'+bn(e.a)+'</b><button class="x" onclick="del(\''+e.id+'\')">×</button></div></div>'});
+  else h+='<div class="mut" style="margin-bottom:4px">মুছতে চাইলে এন্ট্রির ওপর চাপুন</div>';
+  es.forEach(function(e){
+    h+='<div class="it" onclick="tog(\''+e.id+'\')"><div class="item" style="border:0"><div><b>'+esc(e.n||e.c)+'</b><div class="mut">'+(e.n?esc(e.c)+" · ":"")+(e.w==="f"?"ফান্ড · ":"")+new Date(e.d).toLocaleDateString("bn-BD",{day:"numeric",month:"short"})+'</div></div><b class="'+(e.t==="in"?"in":"ex")+'">'+(e.t==="in"?"+":"−")+'৳'+bn(e.a)+'</b></div>';
+    if(OPEN===e.id)h+='<button class="btn o" style="color:var(--r);margin:0 0 10px" onclick="event.stopPropagation();del(\''+e.id+'\')">মুছে ফেলুন</button>';
+    h+='</div>';
+  });
   return h+'</div>';
 }
 function del(id){if(!confirm("এই এন্ট্রি মুছে ফেলবেন?"))return;var p=me();p.entries=p.entries.filter(function(e){return e.id!==id});save();render()}
+function doLogout(){if(confirm("লগআউট করবেন? আবার ঢুকতে গুগল দিয়ে সাইন-ইন করতে হবে।"))auth.signOut()}
+function renProf(){var p=me(),n=prompt("প্রোফাইলের নতুন নাম",p.name);if(n&&n.trim()){p.name=n.trim();save();render()}}
 function more(){
-  return acct()+'<div class="card"><b>ডেটা ব্যাকআপ</b><p class="mut">ডেটা শুধু এই ব্রাউজারে থাকে। ব্রাউজারের ডেটা মুছলে হারিয়ে যাবে, তাই নিয়মিত ব্যাকআপ নিন।</p><button class="btn" onclick="exp()">সব প্রোফাইলের ব্যাকআপ নামান</button><label>ব্যাকআপ ফাইল ফেরত আনুন</label><input type="file" accept=".json" onchange="imp(this)"></div><div class="card"><b>এই প্রোফাইল</b><button class="btn o" onclick="delProf()">“'+esc(me().name)+'” প্রোফাইল মুছুন</button></div>';
+  var h='';
+  if(cloud&&user)h+='<div class="card"><div class="row">'+(user.photoURL?'<img src="'+esc(user.photoURL)+'" alt="" referrerpolicy="no-referrer" style="width:48px;height:48px;border-radius:50%">':'')+'<div><b>'+esc(user.displayName||"")+'</b><div class="mut">'+esc(user.email||"")+'</div></div></div><div class="mut" id="st" style="margin-top:8px">'+st+'</div><button class="btn o" style="color:var(--r)" onclick="doLogout()">লগআউট</button></div>';
+  else if(!cloud)h+='<div class="card mut">ক্লাউড চালু নেই, ডেটা শুধু এই ফোনে জমা হচ্ছে।</div>';
+  h+='<h2>প্রোফাইল</h2><div class="card">';
+  S.profiles.forEach(function(q){var c=q.id===S.cur;h+='<button class="pf" onclick="pick(\''+q.id+'\')"><b>'+esc(q.name)+'</b><span class="'+(c?"in":"mut")+'">'+(c?"✓ চলমান":"সুইচ করুন")+'</span></button>'});
+  h+='<label>নতুন প্রোফাইল</label><input id="pn" placeholder="নাম"><button class="btn" onclick="addProf()">প্রোফাইল যোগ করুন</button><div class="row"><button class="btn o" onclick="renProf()">নাম বদলান</button><button class="btn o" style="color:var(--r)" onclick="delProf()">মুছুন</button></div></div>';
+  if(cloud&&user)h+='<div class="card"><b>পাসওয়ার্ড ও নিরাপত্তা</b><p class="mut">লগইন গুগলের মাধ্যমে হয়, তাই পাসওয়ার্ড ও 2-Step Verification গুগল অ্যাকাউন্টে বদলাতে হবে।</p><a class="btn o" style="display:block;text-align:center;text-decoration:none" href="https://myaccount.google.com/security" target="_blank" rel="noopener">গুগল অ্যাকাউন্ট সেটিংস</a></div>';
+  h+='<div class="card"><b>ডেটা ব্যাকআপ</b><p class="mut">ক্লাউডের পাশাপাশি মাঝে মাঝে ফাইল ব্যাকআপ রাখা ভালো।</p><button class="btn" onclick="exp()">সব প্রোফাইলের ব্যাকআপ নামান</button><label>ব্যাকআপ ফাইল ফেরত আনুন</label><input type="file" accept=".json" onchange="imp(this)"></div>';
+  return h;
 }
 function exp(){var b=new Blob([JSON.stringify(S)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="hisab-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove()}
 function imp(i){var f=i.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);if(!d.profiles)throw 0;if(!confirm("বর্তমান সব ডেটা বদলে ব্যাকআপের ডেটা বসবে। নিশ্চিত?"))return;S=d;S.cur=null;save();render()}catch(e){alert("ফাইলটি সঠিক ব্যাকআপ নয়")}};r.readAsText(f)}
