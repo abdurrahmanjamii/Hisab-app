@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f6b4a">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>আমার হিসাব</title>
 <style>
@@ -213,6 +216,7 @@ function report(){
   w.document.close();
 }
 load();render();initCloud();
+if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
 </script>
 </body>
 </html>
