@@ -48,6 +48,10 @@ nav button.on{background:var(--g);border-color:var(--g);color:#fff}
 .it{border-bottom:1px solid var(--line)}.it:last-child{border:0}
 .chip{display:inline-flex;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:6px 4px 6px 12px;margin:6px 6px 0 0}
 .chip button{border:0;background:none;color:var(--r);font-size:18px;line-height:1;padding:0 8px}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.sr.tot{border-bottom:0;border-top:2px solid var(--line);margin-top:2px;padding-top:12px}
+.msel{width:auto;max-width:70%;border:0;background:transparent;font-weight:700;font-size:17px;text-align:center;margin:0}
+.bar.g i{background:var(--g)}
 .pf{display:flex;justify-content:space-between;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--card);width:100%;text-align:left}
 .empty{text-align:center;color:var(--mut);padding:22px 0}
 </style>
@@ -58,8 +62,8 @@ nav button.on{background:var(--g);border-color:var(--g);color:#fff}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-var KEY="hisab_v1",S={profiles:[],cur:null},tab="home",month=new Date().toISOString().slice(0,7);
-var F={w:"p",t:"out",c:"",a:"",d:new Date().toISOString().slice(0,10),n:""};
+var KEY="hisab_v1",S={profiles:[],cur:null},tab="home",month=today().slice(0,7);
+var F={w:"p",t:"out",c:"",a:"",d:today(),n:""};
 var CATS={pin:["মাদ্রাসার বেতন","টিউশন","হাদিয়া"],pout:["পরিবার","নিজের জন্য","যাতায়াত"],fin:["প্রতিষ্ঠান থেকে প্রাপ্তি"],fout:["নাস্তা","রাস্তা/যাতায়াত"]};
 function load(){try{var r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}}
 function saveLocal(){try{localStorage.setItem(lk(),JSON.stringify(S))}catch(e){alert("ডেটা সেভ করা যায়নি। ব্রাউজারের স্টোরেজ বন্ধ থাকতে পারে।")}}
@@ -119,7 +123,8 @@ function render(){
   h+='<nav><div>'+nb('home','সারসংক্ষেপ')+nb('add','নতুন এন্ট্রি')+nb('list','বিবরণ')+nb('more','অ্যাকাউন্ট')+'</div></nav>';
   el.innerHTML=h;
 }
-function go(t){tab=t;render();window.scrollTo(0,0)}
+function today(){var d=new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function go(t){if(tab==="add"&&t!=="add"&&EDIT){EDIT=null;F.a="";F.n=""}if(t==="add"&&!EDIT)F.w=VW;tab=t;OPEN=null;render();window.scrollTo(0,0)}
 function profiles(){
   var h='<h1>কে ব্যবহার করছেন?</h1><p class="mut">প্রত্যেকের হিসাব আলাদা থাকে। সব ডেটা শুধু এই ফোনেই জমা হয়।</p>';
   S.profiles.forEach(function(p){h+='<button class="pf" onclick="pick(\''+p.id+'\')"><b>'+esc(p.name)+'</b><span class="mut">'+bn(p.entries.length)+' টি এন্ট্রি</span></button>'});
@@ -130,62 +135,108 @@ function profiles(){
 function addProf(){var v=document.getElementById("pn").value.trim();if(!v)return alert("নাম লিখুন");var p={id:"p"+Date.now(),name:v,entries:[]};S.profiles.push(p);S.cur=p.id;tab="home";save();render()}
 function pick(id){S.cur=id;tab="home";save();render()}
 function logout(){S.cur=null;save();render()}
+function mname(m){return new Date(m+"-01").toLocaleDateString("bn-BD",{month:"long",year:"numeric"})}
 function monthBar(){
-  return '<div class="row sp"><button class="x" onclick="mv(-1)">‹</button><b>'+new Date(month+"-01").toLocaleDateString("bn-BD",{month:"long",year:"numeric"})+'</b><button class="x" onclick="mv(1)">›</button></div>';
+  var ms=uniq(me().entries.map(function(e){return e.d.slice(0,7)}).concat([today().slice(0,7),month])).sort().reverse();
+  return '<div class="row sp"><button class="x" onclick="mv(-1)">‹</button><select class="msel" onchange="month=this.value;OPEN=null;render()">'+ms.map(function(m){return '<option value="'+m+'"'+(m===month?' selected':'')+'>'+mname(m)+'</option>'}).join("")+'</select><button class="x" onclick="mv(1)">›</button></div>';
 }
-function mv(d){var x=new Date(month+"-01");x.setMonth(x.getMonth()+d);month=x.toISOString().slice(0,7);render()}
+function mv(d){var p=month.split("-"),y=+p[0],m=+p[1]-1+d;y+=Math.floor(m/12);m=((m%12)+12)%12;month=y+"-"+("0"+(m+1)).slice(-2);OPEN=null;render()}
+function bal(all,w,before){return all.filter(function(e){return e.w===w&&e.d.slice(0,7)<before}).reduce(function(s,e){return s+(e.t==="in"?e.a:-e.a)},0)}
 function sum(es,w,t){return es.filter(function(e){return e.w===w&&e.t===t}).reduce(function(s,e){return s+e.a},0)}
+var VW="p",EDIT=null;
+function vw(w){VW=w;OPEN=null;render()}
+function wtab(){return '<div class="seg" style="margin:6px 0 12px"><button class="'+(VW==="p"?"on":"")+'" onclick="vw(\'p\')">ব্যক্তিগত</button><button class="'+(VW==="f"?"on":"")+'" onclick="vw(\'f\')">প্রতিষ্ঠান ফান্ড</button></div>'}
+function stm(op,inn,out,w){
+  var cl=op+inn-out;
+  return '<div class="sr"><span>পূর্ব মাসের অবশিষ্ট (জের)</span><b class="'+(op<0?"ex":"")+'">৳'+bn(op)+'</b></div>'
+  +'<div class="sr"><span>'+(w==="p"?"এ মাসের আয়":"এ মাসে পেয়েছি")+'</span><b class="in">+৳'+bn(inn)+'</b></div>'
+  +'<div class="sr"><span>এ মাসের খরচ</span><b class="ex">−৳'+bn(out)+'</b></div>'
+  +'<div class="sr tot"><b>'+(w==="p"?"নিজের অবশিষ্ট":"ফান্ডে অবশিষ্ট")+'</b><b class="num '+(cl<0?"ex":"in")+'">৳'+bn(cl)+'</b></div>';
+}
+function brk(es,w,t,title){
+  var m={},tot=0;
+  es.filter(function(e){return e.w===w&&e.t===t}).forEach(function(e){m[e.c]=(m[e.c]||0)+e.a;tot+=e.a});
+  var ks=Object.keys(m).sort(function(a,b){return m[b]-m[a]});
+  if(!ks.length)return '';
+  return '<div class="card"><div class="row sp"><b>'+title+'</b><b class="'+(t==="in"?"in":"ex")+'">৳'+bn(tot)+'</b></div>'+ks.map(function(k){return '<div style="margin-top:10px"><div class="row sp"><span>'+esc(k)+'</span><span>৳'+bn(m[k])+'</span></div><div class="bar '+(t==="in"?"g":"")+'"><i style="width:'+Math.round(m[k]/tot*100)+'%"></i></div></div>'}).join("")+'</div>';
+}
 function home(){
-  var all=me().entries,es=all.filter(function(e){return e.d.slice(0,7)===month});
-  var pi=sum(es,"p","in"),po=sum(es,"p","out"),fi=sum(all,"f","in"),fo=sum(all,"f","out"),fmi=sum(es,"f","in"),fmo=sum(es,"f","out");
-  var h=monthBar()+'<h2>ব্যক্তিগত</h2><div class="card"><div class="grid"><div class="box" style="background:var(--gl)"><div class="mut">আয়</div><div class="num in">৳'+bn(pi)+'</div></div><div class="box" style="background:var(--rl)"><div class="mut">খরচ</div><div class="num ex">৳'+bn(po)+'</div></div></div><div class="row sp" style="margin-top:12px"><span>এ মাসের সঞ্চয়</span><b class="'+(pi-po>=0?"in":"ex")+'">৳'+bn(pi-po)+'</b></div></div>';
-  var tot=po||1,bk="";
-  uniq(es.filter(function(e){return e.w==="p"&&e.t==="out"}).map(function(e){return e.c})).forEach(function(c){var v=es.filter(function(e){return e.w==="p"&&e.t==="out"&&e.c===c}).reduce(function(s,e){return s+e.a},0);if(v)bk+='<div style="margin-top:10px"><div class="row sp"><span>'+esc(c)+'</span><span>৳'+bn(v)+'</span></div><div class="bar"><i style="width:'+Math.round(v/tot*100)+'%"></i></div></div>'});
-  if(bk)h+='<div class="card"><b>খরচ কোথায় গেল</b>'+bk+'</div>';
-  h+='<h2>প্রতিষ্ঠান ফান্ড</h2><div class="card" style="background:var(--al)"><div class="mut">বর্তমান বাকি (আমানত)</div><div class="num" style="color:var(--a)">৳'+bn(fi-fo)+'</div><div class="mut" style="margin-top:8px">এ মাসে পেয়েছি ৳'+bn(fmi)+' · খরচ করেছি ৳'+bn(fmo)+'</div></div>';
-  h+='<button class="btn o" onclick="report()">প্রতিষ্ঠান ফান্ডের রিপোর্ট দেখুন / প্রিন্ট করুন</button>';
+  var all=me().entries,w=VW,es=all.filter(function(e){return e.w===w&&e.d.slice(0,7)===month});
+  var op=bal(all,w,month),inn=sum(es,w,"in"),out=sum(es,w,"out");
+  var h=wtab()+monthBar();
+  h+='<div class="card" style="margin-top:10px"><div class="mut" style="margin-bottom:4px">'+(w==="p"?"ব্যক্তিগত হিসাব":"প্রতিষ্ঠান ফান্ড")+' — সংক্ষিপ্ত হিসাব</div>'+stm(op,inn,out,w)+'</div>';
+  if(!es.length)h+='<div class="empty">এ মাসে কোনো এন্ট্রি নেই।</div>';
+  h+=brk(es,w,"in",w==="p"?"আয় (ক্যাটাগরি অনুযায়ী)":"পাওয়া (ক্যাটাগরি অনুযায়ী)")+brk(es,w,"out","খরচ (ক্যাটাগরি অনুযায়ী)");
+  h+='<div class="mut" style="text-align:center;margin:6px 0">এই অবশিষ্ট ৳'+bn(op+inn-out)+' পরের মাসে “পূর্ব মাসের অবশিষ্ট” হিসেবে যোগ হবে।</div>';
+  if(w==="f")h+='<button class="btn o" onclick="report()">প্রতিষ্ঠান ফান্ডের রিপোর্ট দেখুন / প্রিন্ট করুন</button>';
   return h;
 }
 var ED=false;
 function catPick(){
   var a=cats(),k=F.w+F.t,h='<label>ক্যাটাগরি</label><div class="cat">';
-  a.forEach(function(c,i){h+='<button class="cb'+(c===F.c?' on':'')+'" onclick="pickCat('+i+')">'+esc(c)+(ED?'<span onclick="event.stopPropagation();delCat(\''+k+'\','+i+')">✕</span>':'')+'</button>'});
+  a.forEach(function(c,i){h+='<button class="cb'+(c===F.c?' on':'')+'" onclick="pickCat('+i+')">'+esc(c)+(ED?'<span onclick="event.stopPropagation();renCat(\''+k+'\','+i+')">✎</span><span onclick="event.stopPropagation();delCat(\''+k+'\','+i+')">✕</span>':'')+'</button>'});
   h+='<button class="cb plus" onclick="newCat()">＋ নতুন</button></div>';
-  return h+'<button class="lk" onclick="keep();ED=!ED;render()">'+(ED?'সম্পাদনা শেষ':'ক্যাটাগরি মুছতে চান?')+'</button>';
+  return h+(ED?'<div class="mut" style="margin-top:6px">✎ চাপলে নাম ঠিক করা যাবে (আগের এন্ট্রির নামও নতুন নামে বদলে যাবে)। ✕ চাপলে ক্যাটাগরি মুছবে, আগের এন্ট্রি থেকে যাবে।</div>':'')+'<button class="lk" onclick="keep();ED=!ED;render()">'+(ED?'সম্পাদনা শেষ':'ক্যাটাগরির নাম ঠিক বা মুছতে চান?')+'</button>';
 }
 function pickCat(i){keep();F.c=cats()[i];render()}
 function newCat(){keep();var n=prompt("নতুন ক্যাটাগরির নাম লিখুন");if(n&&n.trim()){addCat(F.w+F.t,n.trim());F.c=n.trim()}render()}
 function add(){
   if(cats().indexOf(F.c)<0)F.c=cats()[0];
-  var h='<div class="card"><label>কোন হিসাব?</label><div class="seg"><button class="'+(F.w==="p"?"on":"")+'" onclick="sf(\'w\',\'p\')">ব্যক্তিগত</button><button class="'+(F.w==="f"?"on":"")+'" onclick="sf(\'w\',\'f\')">প্রতিষ্ঠান ফান্ড</button></div>';
+  var h='<div class="card">'+(EDIT?'<div class="mut" style="color:var(--a)">✎ এন্ট্রি সম্পাদনা করছেন। আগের তথ্য ইতিহাসে জমা থাকবে।</div>':'')+'<label>কোন হিসাব?</label><div class="seg"><button class="'+(F.w==="p"?"on":"")+'" onclick="sf(\'w\',\'p\')">ব্যক্তিগত</button><button class="'+(F.w==="f"?"on":"")+'" onclick="sf(\'w\',\'f\')">প্রতিষ্ঠান ফান্ড</button></div>';
   h+='<div class="seg '+(F.t==="out"?"out":"")+'"><button class="'+(F.t==="in"?"on":"")+'" onclick="sf(\'t\',\'in\')">'+(F.w==="p"?"আয়":"টাকা পেলাম")+'</button><button class="'+(F.t==="out"?"on":"")+'" onclick="sf(\'t\',\'out\')">খরচ</button></div>';
   h+=catPick();
   h+='<label>টাকার পরিমাণ</label><input id="fa" type="number" inputmode="decimal" min="0" placeholder="0" value="'+esc(F.a)+'">';
   h+='<label>তারিখ</label><input id="fd" type="date" value="'+F.d+'">';
   h+='<label>বিবরণ (ঐচ্ছিক): কী কিনলেন বা কার কাছ থেকে পেলেন</label><input id="fn" placeholder="যেমন: ১ কেজি আলু" value="'+esc(F.n)+'">';
-  return h+'<button class="btn" onclick="submit()">সংরক্ষণ করুন</button></div>';
+  return h+'<button class="btn" onclick="submit()">'+(EDIT?"পরিবর্তন সংরক্ষণ করুন":"সংরক্ষণ করুন")+'</button>'+(EDIT?'<button class="btn o" onclick="cancelEdit()">বাতিল</button>':'')+'</div>';
 }
 function sf(k,v){keep();F[k]=v;render()}
 function keep(){var a=document.getElementById("fa");if(a){F.a=a.value;F.d=document.getElementById("fd").value;F.n=document.getElementById("fn").value}}
+function renCat(k,i){
+  var a=getCats(k),old=a[i],n=prompt("ক্যাটাগরির সঠিক নাম লিখুন",old);
+  if(!n||!n.trim()||n.trim()===old)return;n=n.trim();
+  var w=k.charAt(0),t=k.slice(1);
+  me().entries.forEach(function(e){if(e.w===w&&e.t===t&&e.c===old)e.c=n});
+  if(a.indexOf(n)>=0)a.splice(i,1);else a[i]=n;
+  if(F.c===old)F.c=n;save();render();
+}
+function snap(e){return {w:e.w,t:e.t,c:e.c,a:e.a,d:e.d,n:e.n,at:Date.now()}}
+function findE(id){return me().entries.find(function(x){return x.id===id})}
 function submit(){
   keep();var a=parseFloat(F.a);
   if(!(a>0))return alert("সঠিক টাকার পরিমাণ লিখুন");
   if(!F.d)return alert("তারিখ দিন");
-  me().entries.push({id:"e"+Date.now(),w:F.w,t:F.t,c:F.c,a:a,d:F.d,n:F.n.trim()});
-  F.a="";F.n="";save();tab="list";month=F.d.slice(0,7);render();
+  if(EDIT){var e=findE(EDIT);if(e){if(!e.h)e.h=[];e.h.push(snap(e));e.w=F.w;e.t=F.t;e.c=F.c;e.a=a;e.d=F.d;e.n=F.n.trim()}EDIT=null}
+  else me().entries.push({id:"e"+Date.now(),w:F.w,t:F.t,c:F.c,a:a,d:F.d,n:F.n.trim()});
+  F.a="";F.n="";VW=F.w;save();tab="list";month=F.d.slice(0,7);OPEN=null;render();
+}
+function startEdit(id){var e=findE(id);if(!e)return;F={w:e.w,t:e.t,c:e.c,a:String(e.a),d:e.d,n:e.n||""};EDIT=id;tab="add";render();window.scrollTo(0,0)}
+function cancelEdit(){EDIT=null;F.a="";F.n="";tab="list";render()}
+function restoreVer(id,i){
+  var e=findE(id);if(!e||!e.h||!e.h[i])return;
+  if(!confirm("এই আগের তথ্য ফিরিয়ে আনবেন? বর্তমান তথ্যও ইতিহাসে থেকে যাবে।"))return;
+  var cur=snap(e),v=e.h.splice(i,1)[0];
+  e.w=v.w;e.t=v.t;e.c=v.c;e.a=v.a;e.d=v.d;e.n=v.n;e.h.push(cur);save();render();
 }
 var OPEN=null;
 function tog(id){OPEN=OPEN===id?null:id;render()}
 function list(){
-  var es=me().entries.filter(function(e){return e.d.slice(0,7)===month}).sort(function(a,b){return b.d.localeCompare(a.d)||b.id.localeCompare(a.id)});
-  var pi=sum(es,"p","in"),po=sum(es,"p","out"),fi=sum(es,"f","in"),fo=sum(es,"f","out");
-  var h=monthBar()+'<div class="card" style="margin-top:10px"><div class="grid"><div class="box" style="background:var(--gl)"><div class="mut">মোট যোগ</div><div class="num in">৳'+bn(pi)+'</div></div><div class="box" style="background:var(--rl)"><div class="mut">মোট খরচ</div><div class="num ex">৳'+bn(po)+'</div></div></div><div class="mut" style="margin-top:10px">প্রতিষ্ঠান ফান্ড: পেয়েছি ৳'+bn(fi)+' · খরচ ৳'+bn(fo)+'</div></div>';
+  var all=me().entries,w=VW;
+  var es=all.filter(function(e){return e.w===w&&e.d.slice(0,7)===month}).sort(function(a,b){return b.d.localeCompare(a.d)||b.id.localeCompare(a.id)});
+  var op=bal(all,w,month),inn=sum(es,w,"in"),out=sum(es,w,"out");
+  var h=wtab()+monthBar()+'<div class="card" style="margin-top:10px"><div class="mut" style="margin-bottom:4px">'+(w==="p"?"ব্যক্তিগত হিসাব":"প্রতিষ্ঠান ফান্ড")+' — বিস্তারিত হিসাব</div>'+stm(op,inn,out,w)+'</div>';
   h+='<div class="card">';
   if(!es.length)h+='<div class="empty">এ মাসে কোনো এন্ট্রি নেই।<br>“নতুন এন্ট্রি” থেকে যোগ করুন।</div>';
-  else h+='<div class="mut" style="margin-bottom:4px">মুছতে চাইলে এন্ট্রির ওপর চাপুন</div>';
+  else h+='<div class="mut" style="margin-bottom:4px">এন্ট্রির ওপর চাপলে সম্পাদনা বা মুছার অপশন আসবে</div>';
   es.forEach(function(e){
-    h+='<div class="it" onclick="tog(\''+e.id+'\')"><div class="item" style="border:0"><div><b>'+esc(e.n||e.c)+'</b><div class="mut">'+(e.n?esc(e.c)+" · ":"")+(e.w==="f"?"ফান্ড · ":"")+new Date(e.d).toLocaleDateString("bn-BD",{day:"numeric",month:"short"})+'</div></div><b class="'+(e.t==="in"?"in":"ex")+'">'+(e.t==="in"?"+":"−")+'৳'+bn(e.a)+'</b></div>';
-    if(OPEN===e.id)h+='<button class="btn o" style="color:var(--r);margin:0 0 10px" onclick="event.stopPropagation();del(\''+e.id+'\')">মুছে ফেলুন</button>';
+    h+='<div class="it" onclick="tog(\''+e.id+'\')"><div class="item" style="border:0"><div><b>'+esc(e.n||e.c)+'</b><div class="mut">'+(e.n?esc(e.c)+" · ":"")+new Date(e.d).toLocaleDateString("bn-BD",{day:"numeric",month:"short"})+(e.h&&e.h.length?" · সম্পাদিত":"")+'</div></div><b class="'+(e.t==="in"?"in":"ex")+'">'+(e.t==="in"?"+":"−")+'৳'+bn(e.a)+'</b></div>';
+    if(OPEN===e.id){
+      h+='<div class="row" style="margin-bottom:10px"><button class="btn o" style="margin:0" onclick="event.stopPropagation();startEdit(\''+e.id+'\')">✎ সম্পাদনা</button><button class="btn o" style="margin:0;color:var(--r)" onclick="event.stopPropagation();del(\''+e.id+'\')">মুছে ফেলুন</button></div>';
+      if(e.h&&e.h.length){
+        h+='<div class="mut" style="margin-bottom:6px">আগের সংস্করণ:</div>';
+        for(var i=e.h.length-1;i>=0;i--){var v=e.h[i];h+='<div class="row sp" style="margin-bottom:8px"><div class="mut">'+esc(v.n||v.c)+' · ৳'+bn(v.a)+' · '+esc(v.d)+'</div><button class="btn o" style="width:auto;margin:0;padding:6px 10px" onclick="event.stopPropagation();restoreVer(\''+e.id+'\','+i+')">ফিরিয়ে আনুন</button></div>'}
+      }
+    }
     h+='</div>';
   });
   return h+'</div>';
