@@ -8,11 +8,16 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>আমার হিসাব</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap">
 <style>
+@font-face{font-family:"SolaimanLipi";src:url("SolaimanLipi.ttf") format("truetype");font-weight:400}
+@font-face{font-family:"SolaimanLipi";src:url("SolaimanLipi-Bold.ttf") format("truetype"),url("SolaimanLipi.ttf") format("truetype");font-weight:700}
+@font-face{font-family:"RuposhiBangla";src:url("RuposhiBangla.ttf") format("truetype");font-weight:400 700}
+h1,h2,.num,.btn,nav button{font-family:"RuposhiBangla","SolaimanLipi","Hind Siliguri",system-ui,sans-serif}
 :root{--bg:#f3f6f1;--card:#fff;--ink:#1d2a22;--mut:#6b7a70;--line:#dfe6dd;--g:#1f6b4a;--gl:#e1f0e8;--r:#b3402f;--rl:#f7e3df;--a:#b07d1c;--al:#f6ecd2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a15;--card:#1b261f;--ink:#e7efe9;--mut:#93a499;--line:#2c3a31;--g:#57c08f;--gl:#1f3a2c;--r:#ef8a7a;--rl:#3d2420;--a:#e0b050;--al:#3a3118}}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hind Siliguri","Noto Sans Bengali","Kalpurush",system-ui,sans-serif;font-size:16px}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"SolaimanLipi","Hind Siliguri","Noto Sans Bengali","Kalpurush",system-ui,sans-serif;font-size:16px}
 body{max-width:520px;margin:0 auto;padding:14px 14px 110px}
 h1{font-size:22px;margin:4px 0 12px}h2{font-size:17px;margin:18px 0 8px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
@@ -64,15 +69,15 @@ nav button.on{background:var(--g);border-color:var(--g);color:#fff}
 <script>
 var KEY="hisab_v1",S={profiles:[],cur:null},tab="home",month=today().slice(0,7);
 var F={w:"p",t:"out",c:"",a:"",d:today(),n:""};
-var CATS={pin:["মাদ্রাসার বেতন","টিউশন","হাদিয়া"],pout:["পরিবার","নিজের জন্য","যাতায়াত"],fin:["প্রতিষ্ঠান থেকে প্রাপ্তি"],fout:["নাস্তা","রাস্তা/যাতায়াত"]};
 function load(){try{var r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}}
 function saveLocal(){try{localStorage.setItem(lk(),JSON.stringify(S))}catch(e){alert("ডেটা সেভ করা যায়নি। ব্রাউজারের স্টোরেজ বন্ধ থাকতে পারে।")}}
 /* ===== Firebase সেটিং: নিচের ৪টি মান নিজের প্রজেক্টের কোড দিয়ে বদলান ===== */
 var cfg={apiKey:"AIzaSyCEi9jzJ3plTbpcqGDzatnYlTzhbOhUJE0",authDomain:"abdurrahmanjamii.firebaseapp.com",projectId:"abdurrahmanjamii",appId:"1:872713119272:web:addd0fb1039fa7ed8d371d"};
 var cloud=cfg.apiKey.indexOf("YOUR")<0,user=null,db=null,auth=null,ready=false,authReady=false,st="",old=null;
 function lk(){return user?KEY+"_"+user.uid:KEY}
-function save(){saveLocal();if(user&&db){st="সেভ হচ্ছে…";hint();db.collection("users").doc(user.uid).set({d:JSON.stringify({profiles:S.profiles}),t:Date.now()}).then(function(){st="☁ ক্লাউডে সেভ হয়েছে";hint()}).catch(function(){st="⚠ ক্লাউডে সেভ হয়নি, নেট চেক করুন";hint()})}}
+function save(){saveLocal();if(user&&db){st="সেভ হচ্ছে…";hint();db.collection("users").doc(user.uid).set({d:JSON.stringify({profiles:S.profiles,meta:S.meta}),t:Date.now()}).then(function(){st="☁ ক্লাউডে সেভ হয়েছে";hint()}).catch(function(){st="⚠ ক্লাউডে সেভ হয়নি, নেট চেক করুন";hint()})}}
 function hint(){var e=document.getElementById("st");if(e)e.textContent=st}
+function readLS(c){try{var r=JSON.parse(localStorage.getItem(lk()));return{profiles:r.profiles||[],meta:r.meta||{},cur:c}}catch(e){return{profiles:[],meta:{},cur:c}}}
 function readLocal(){try{var r=localStorage.getItem(lk());return r?JSON.parse(r).profiles||[]:[]}catch(e){return[]}}
 function lastCur(){try{var r=localStorage.getItem(lk());return r?JSON.parse(r).cur:null}catch(e){return null}}
 function setCur(){var c=S.cur;if(!S.profiles.some(function(p){return p.id===c}))c=S.profiles.length===1?S.profiles[0].id:null;S.cur=c}
@@ -84,10 +89,10 @@ function initCloud(){
     if(!u){S={profiles:[],cur:null};render();return}
     var c=lastCur();render();
     db.collection("users").doc(u.uid).get().then(function(doc){
-      if(doc.exists){S={profiles:JSON.parse(doc.data().d).profiles||[],cur:c}}
-      else{S={profiles:(old&&confirm("এই ফোনে আগের হিসাব আছে। এটা এই গুগল অ্যাকাউন্টে তুলবেন?"))?old:[],cur:c}}
+      if(doc.exists){var cd=JSON.parse(doc.data().d);S={profiles:cd.profiles||[],meta:cd.meta||{},cur:c}}
+      else{S={profiles:(old&&confirm("এই ফোনে আগের হিসাব আছে। এটা এই গুগল অ্যাকাউন্টে তুলবেন?"))?old:[],meta:{},cur:c}}
       setCur();ready=true;if(doc.exists)saveLocal();else save();render();
-    }).catch(function(){S={profiles:readLocal(),cur:c};setCur();ready=true;render()});
+    }).catch(function(){S=readLS(c);setCur();ready=true;render()});
   });
 }
 function loginScr(){return '<h1>আমার হিসাব</h1><div class="card"><p>গুগল অ্যাকাউন্ট দিয়ে ঢুকুন। আপনার হিসাব আপনার অ্যাকাউন্টে জমা থাকবে, ফোন বদলালেও নতুন ফোনে ঢুকলেই ফেরত পাবেন। প্রত্যেকের হিসাব আলাদা।</p><button class="btn" onclick="gin()">গুগল দিয়ে সাইন-ইন করুন</button></div>'}
@@ -96,30 +101,32 @@ function acct(){return cloud&&user?'<div class="card"><b>'+esc(user.displayName|
 function me(){return S.profiles.find(function(p){return p.id===S.cur})}
 function bn(n){return Number(n||0).toLocaleString("bn-BD")}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function getCats(k){var p=me();if(!p.cats)p.cats={};if(!p.cats[k])p.cats[k]=CATS[k].slice();return p.cats[k]}
-function cats(){return getCats(F.w+F.t)}
-function addCat(k,n){var a=getCats(k);if(a.indexOf(n)<0)a.push(n);save()}
-function delCat(k,i){var a=getCats(k);if(a.length<2)return alert("কমপক্ষে একটি ক্যাটাগরি রাখতে হবে");if(!confirm("“"+a[i]+"” মুছবেন? আগের এন্ট্রিগুলো যেমন আছে তেমনই থাকবে।"))return;a.splice(i,1);save();render()}
-function catAdd(k){var el=document.getElementById("nc"+k),n=el.value.trim();if(!n)return;addCat(k,n);render()}
-function selCat(v){if(v!=="__new"){F.c=v;return}keep();var n=prompt("নতুন ক্যাটাগরির নাম লিখুন");if(n&&n.trim()){addCat(F.w+F.t,n.trim());F.c=n.trim()}render()}
+var DEFC={own:{in:["মাদ্রাসার বেতন","টিউশন","হাদিয়া"],out:["পরিবার","নিজের জন্য","যাতায়াত"]},trust:{in:["প্রতিষ্ঠান থেকে প্রাপ্তি"],out:["নাস্তা","রাস্তা/যাতায়াত"]}};
+function ens(p){if(!p.funds)p.funds=[{id:"p",name:"ব্যক্তিগত",type:"own"},{id:"f",name:"প্রতিষ্ঠান ফান্ড",type:"trust"}];if(!p.cats)p.cats={};if(!p.trash)p.trash=[];if(!p.entries)p.entries=[]}
+function fix(){
+  if(!S.meta)S.meta={};if(!S.meta.bk)S.meta.bk={};
+  var ch=false,lim=Date.now()-7*864e5;
+  S.profiles.forEach(function(p){ens(p);var n=p.trash.length;p.trash=p.trash.filter(function(t){return t.at>lim});if(p.trash.length!==n)ch=true});
+  var p=me();if(p&&!fund(VW))VW=p.funds[0].id;
+  if(ch)save();
+}
+function fund(id){var p=me();return p&&p.funds.find(function(f){return f.id===id})}
+function isOwn(w){var f=fund(w);return !f||f.type==="own"}
+function fname(w){var f=fund(w);return f?f.name:"ফান্ড"}
+function getCats(w,t){var p=me(),k=w+t;if(!p.cats[k])p.cats[k]=DEFC[isOwn(w)?"own":"trust"][t].slice();return p.cats[k]}
+function cats(){return getCats(F.w,F.t)}
 function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
 var IC={home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',list:'<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',add:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',cat:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><path d="M7 7h.01"/>',more:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'};
-function nb(t,l){return '<button class="'+(tab===t?"on":"")+'" onclick="go(\''+t+'\')"><svg viewBox="0 0 24 24">'+IC[t]+'</svg>'+l+'</button>'}
-function catScr(){
-  var G=[["pin","ব্যক্তিগত আয়"],["pout","ব্যক্তিগত খরচ"],["fin","প্রতিষ্ঠান ফান্ড: টাকা পাওয়া"],["fout","প্রতিষ্ঠান ফান্ড: খরচ"]];
-  return '<p class="mut">নিজের মতো ক্যাটাগরি যোগ করুন বা মুছুন।</p>'+G.map(function(g){
-    var k=g[0],chips=getCats(k).map(function(c,i){return '<span class="chip">'+esc(c)+'<button onclick="delCat(\''+k+'\','+i+')">×</button></span>'}).join("");
-    return '<div class="card"><b>'+g[1]+'</b><div>'+chips+'</div><div class="row" style="margin-top:10px"><input id="nc'+k+'" placeholder="নতুন নাম"><button class="btn" style="width:auto;margin:4px 0 0;padding:11px 16px" onclick="catAdd(\''+k+'\')">যোগ</button></div></div>'}).join("");
-}
-
+function nb(t,l){return '<button class="'+(tab===t||(t==="more"&&["set","trash","about","privacy","terms"].indexOf(tab)>=0)?"on":"")+'" onclick="go(\''+t+'\')"><svg viewBox="0 0 24 24">'+IC[t]+'</svg>'+l+'</button>'}
 function render(){
   var el=document.getElementById("app");
   if(cloud&&!authReady){el.innerHTML='<div class="empty">লোড হচ্ছে…</div>';return}
   if(cloud&&!user){el.innerHTML=loginScr();return}
   if(cloud&&!ready){el.innerHTML='<div class="empty">লোড হচ্ছে…</div>';return}
+  fix();
   if(!me()){el.innerHTML=profiles();return}
   var h='<div class="row sp"><h1>'+esc(me().name)+' এর হিসাব</h1></div>';
-  h+=tab==="home"?home():tab==="add"?add():tab==="list"?list():tab==="cat"?catScr():more();
+  h+=tab==="home"?home():tab==="add"?add():tab==="list"?list():tab==="set"?settings():tab==="trash"?trashScr():tab==="about"?aboutScr():tab==="privacy"?privacyScr():tab==="terms"?termsScr():more();
   h+='<nav><div>'+nb('home','সারসংক্ষেপ')+nb('add','নতুন এন্ট্রি')+nb('list','বিবরণ')+nb('more','অ্যাকাউন্ট')+'</div></nav>';
   el.innerHTML=h;
 }
@@ -134,7 +141,6 @@ function profiles(){
 }
 function addProf(){var v=document.getElementById("pn").value.trim();if(!v)return alert("নাম লিখুন");var p={id:"p"+Date.now(),name:v,entries:[]};S.profiles.push(p);S.cur=p.id;tab="home";save();render()}
 function pick(id){S.cur=id;tab="home";save();render()}
-function logout(){S.cur=null;save();render()}
 function mname(m){return new Date(m+"-01").toLocaleDateString("bn-BD",{month:"long",year:"numeric"})}
 function monthBar(){
   var ms=uniq(me().entries.map(function(e){return e.d.slice(0,7)}).concat([today().slice(0,7),month])).sort().reverse();
@@ -145,13 +151,13 @@ function bal(all,w,before){return all.filter(function(e){return e.w===w&&e.d.sli
 function sum(es,w,t){return es.filter(function(e){return e.w===w&&e.t===t}).reduce(function(s,e){return s+e.a},0)}
 var VW="p",EDIT=null;
 function vw(w){VW=w;OPEN=null;render()}
-function wtab(){return '<div class="seg" style="margin:6px 0 12px"><button class="'+(VW==="p"?"on":"")+'" onclick="vw(\'p\')">ব্যক্তিগত</button><button class="'+(VW==="f"?"on":"")+'" onclick="vw(\'f\')">প্রতিষ্ঠান ফান্ড</button></div>'}
+function wtab(){return '<div class="cat" style="margin:6px 0 12px">'+me().funds.map(function(f){return '<button class="cb'+(f.id===VW?' on':'')+'" onclick="vw(\''+f.id+'\')">'+esc(f.name)+'</button>'}).join("")+'</div>'}
 function stm(op,inn,out,w){
   var cl=op+inn-out;
   return '<div class="sr"><span>পূর্ব মাসের অবশিষ্ট (জের)</span><b class="'+(op<0?"ex":"")+'">৳'+bn(op)+'</b></div>'
-  +'<div class="sr"><span>'+(w==="p"?"এ মাসের আয়":"এ মাসে পেয়েছি")+'</span><b class="in">+৳'+bn(inn)+'</b></div>'
+  +'<div class="sr"><span>'+(isOwn(w)?"এ মাসের আয়":"এ মাসে পেয়েছি")+'</span><b class="in">+৳'+bn(inn)+'</b></div>'
   +'<div class="sr"><span>এ মাসের খরচ</span><b class="ex">−৳'+bn(out)+'</b></div>'
-  +'<div class="sr tot"><b>'+(w==="p"?"নিজের অবশিষ্ট":"ফান্ডে অবশিষ্ট")+'</b><b class="num '+(cl<0?"ex":"in")+'">৳'+bn(cl)+'</b></div>';
+  +'<div class="sr tot"><b>'+(isOwn(w)?"নিজের অবশিষ্ট":"ফান্ডে অবশিষ্ট")+'</b><b class="num '+(cl<0?"ex":"in")+'">৳'+bn(cl)+'</b></div>';
 }
 function brk(es,w,t,title){
   var m={},tot=0;
@@ -164,26 +170,23 @@ function home(){
   var all=me().entries,w=VW,es=all.filter(function(e){return e.w===w&&e.d.slice(0,7)===month});
   var op=bal(all,w,month),inn=sum(es,w,"in"),out=sum(es,w,"out");
   var h=wtab()+monthBar();
-  h+='<div class="card" style="margin-top:10px"><div class="mut" style="margin-bottom:4px">'+(w==="p"?"ব্যক্তিগত হিসাব":"প্রতিষ্ঠান ফান্ড")+' — সংক্ষিপ্ত হিসাব</div>'+stm(op,inn,out,w)+'</div>';
+  h+='<div class="card" style="margin-top:10px"><div class="mut" style="margin-bottom:4px">'+(fname(w))+' — সংক্ষিপ্ত হিসাব</div>'+stm(op,inn,out,w)+'</div>';
   if(!es.length)h+='<div class="empty">এ মাসে কোনো এন্ট্রি নেই।</div>';
-  h+=brk(es,w,"in",w==="p"?"আয় (ক্যাটাগরি অনুযায়ী)":"পাওয়া (ক্যাটাগরি অনুযায়ী)")+brk(es,w,"out","খরচ (ক্যাটাগরি অনুযায়ী)");
+  h+=brk(es,w,"in",isOwn(w)?"আয় (ক্যাটাগরি অনুযায়ী)":"পাওয়া (ক্যাটাগরি অনুযায়ী)")+brk(es,w,"out","খরচ (ক্যাটাগরি অনুযায়ী)");
   h+='<div class="mut" style="text-align:center;margin:6px 0">এই অবশিষ্ট ৳'+bn(op+inn-out)+' পরের মাসে “পূর্ব মাসের অবশিষ্ট” হিসেবে যোগ হবে।</div>';
-  if(w==="f")h+='<button class="btn o" onclick="report()">প্রতিষ্ঠান ফান্ডের রিপোর্ট দেখুন / প্রিন্ট করুন</button>';
+  if(!isOwn(w))h+='<button class="btn o" onclick="report(\''+w+'\')">প্রতিষ্ঠান ফান্ডের রিপোর্ট দেখুন / প্রিন্ট করুন</button>';
   return h;
 }
-var ED=false;
-function catPick(){
-  var a=cats(),k=F.w+F.t,h='<label>ক্যাটাগরি</label><div class="cat">';
-  a.forEach(function(c,i){h+='<button class="cb'+(c===F.c?' on':'')+'" onclick="pickCat('+i+')">'+esc(c)+(ED?'<span onclick="event.stopPropagation();renCat(\''+k+'\','+i+')">✎</span><span onclick="event.stopPropagation();delCat(\''+k+'\','+i+')">✕</span>':'')+'</button>'});
-  h+='<button class="cb plus" onclick="newCat()">＋ নতুন</button></div>';
-  return h+(ED?'<div class="mut" style="margin-top:6px">✎ চাপলে নাম ঠিক করা যাবে (আগের এন্ট্রির নামও নতুন নামে বদলে যাবে)। ✕ চাপলে ক্যাটাগরি মুছবে, আগের এন্ট্রি থেকে যাবে।</div>':'')+'<button class="lk" onclick="keep();ED=!ED;render()">'+(ED?'সম্পাদনা শেষ':'ক্যাটাগরির নাম ঠিক বা মুছতে চান?')+'</button>';
-}
 function pickCat(i){keep();F.c=cats()[i];render()}
-function newCat(){keep();var n=prompt("নতুন ক্যাটাগরির নাম লিখুন");if(n&&n.trim()){addCat(F.w+F.t,n.trim());F.c=n.trim()}render()}
+function catPick(){
+  var h='<label>ক্যাটাগরি</label><div class="cat">';
+  cats().forEach(function(c,i){h+='<button class="cb'+(c===F.c?' on':'')+'" onclick="pickCat('+i+')">'+esc(c)+'</button>'});
+  return h+'</div><div class="mut" style="margin-top:8px">নতুন ক্যাটাগরি বা ফান্ড যোগ/ঠিক করতে <button class="lk" onclick="keep();go(\'set\')">অ্যাকাউন্ট → সেটিংস</button> এ যান।</div>';
+}
 function add(){
-  if(cats().indexOf(F.c)<0)F.c=cats()[0];
-  var h='<div class="card">'+(EDIT?'<div class="mut" style="color:var(--a)">✎ এন্ট্রি সম্পাদনা করছেন। আগের তথ্য ইতিহাসে জমা থাকবে।</div>':'')+'<label>কোন হিসাব?</label><div class="seg"><button class="'+(F.w==="p"?"on":"")+'" onclick="sf(\'w\',\'p\')">ব্যক্তিগত</button><button class="'+(F.w==="f"?"on":"")+'" onclick="sf(\'w\',\'f\')">প্রতিষ্ঠান ফান্ড</button></div>';
-  h+='<div class="seg '+(F.t==="out"?"out":"")+'"><button class="'+(F.t==="in"?"on":"")+'" onclick="sf(\'t\',\'in\')">'+(F.w==="p"?"আয়":"টাকা পেলাম")+'</button><button class="'+(F.t==="out"?"on":"")+'" onclick="sf(\'t\',\'out\')">খরচ</button></div>';
+  var p=me();if(!fund(F.w))F.w=VW;if(cats().indexOf(F.c)<0)F.c=cats()[0];
+  var h='<div class="card">'+(EDIT?'<div class="mut" style="color:var(--a)">✎ এন্ট্রি সম্পাদনা করছেন। আগের তথ্য ইতিহাসে জমা থাকবে।</div>':'')+'<label>কোন ফান্ড?</label><div class="cat">'+p.funds.map(function(f){return '<button class="cb'+(f.id===F.w?' on':'')+'" onclick="sf(\'w\',\''+f.id+'\')">'+esc(f.name)+'</button>'}).join("")+'</div>';
+  h+='<div class="seg '+(F.t==="out"?"out":"")+'"><button class="'+(F.t==="in"?"on":"")+'" onclick="sf(\'t\',\'in\')">'+(isOwn(F.w)?"আয়":"টাকা পেলাম")+'</button><button class="'+(F.t==="out"?"on":"")+'" onclick="sf(\'t\',\'out\')">খরচ</button></div>';
   h+=catPick();
   h+='<label>টাকার পরিমাণ</label><input id="fa" type="number" inputmode="decimal" min="0" placeholder="0" value="'+esc(F.a)+'">';
   h+='<label>তারিখ</label><input id="fd" type="date" value="'+F.d+'">';
@@ -192,14 +195,6 @@ function add(){
 }
 function sf(k,v){keep();F[k]=v;render()}
 function keep(){var a=document.getElementById("fa");if(a){F.a=a.value;F.d=document.getElementById("fd").value;F.n=document.getElementById("fn").value}}
-function renCat(k,i){
-  var a=getCats(k),old=a[i],n=prompt("ক্যাটাগরির সঠিক নাম লিখুন",old);
-  if(!n||!n.trim()||n.trim()===old)return;n=n.trim();
-  var w=k.charAt(0),t=k.slice(1);
-  me().entries.forEach(function(e){if(e.w===w&&e.t===t&&e.c===old)e.c=n});
-  if(a.indexOf(n)>=0)a.splice(i,1);else a[i]=n;
-  if(F.c===old)F.c=n;save();render();
-}
 function snap(e){return {w:e.w,t:e.t,c:e.c,a:e.a,d:e.d,n:e.n,at:Date.now()}}
 function findE(id){return me().entries.find(function(x){return x.id===id})}
 function submit(){
@@ -224,7 +219,7 @@ function list(){
   var all=me().entries,w=VW;
   var es=all.filter(function(e){return e.w===w&&e.d.slice(0,7)===month}).sort(function(a,b){return b.d.localeCompare(a.d)||b.id.localeCompare(a.id)});
   var op=bal(all,w,month),inn=sum(es,w,"in"),out=sum(es,w,"out");
-  var h=wtab()+monthBar()+'<div class="card" style="margin-top:10px"><div class="mut" style="margin-bottom:4px">'+(w==="p"?"ব্যক্তিগত হিসাব":"প্রতিষ্ঠান ফান্ড")+' — বিস্তারিত হিসাব</div>'+stm(op,inn,out,w)+'</div>';
+  var h=wtab()+monthBar()+'<div class="card" style="margin-top:10px"><div class="mut" style="margin-bottom:4px">'+(fname(w))+' — বিস্তারিত হিসাব</div>'+stm(op,inn,out,w)+'</div>';
   h+='<div class="card">';
   if(!es.length)h+='<div class="empty">এ মাসে কোনো এন্ট্রি নেই।<br>“নতুন এন্ট্রি” থেকে যোগ করুন।</div>';
   else h+='<div class="mut" style="margin-bottom:4px">এন্ট্রির ওপর চাপলে সম্পাদনা বা মুছার অপশন আসবে</div>';
@@ -241,29 +236,155 @@ function list(){
   });
   return h+'</div>';
 }
-function del(id){if(!confirm("এই এন্ট্রি মুছে ফেলবেন?"))return;var p=me();p.entries=p.entries.filter(function(e){return e.id!==id});save();render()}
+function del(id){
+  var p=me(),e=findE(id);if(!e||!confirm("এন্ট্রিটি “সম্প্রতি মুছে ফেলা” তে সরাবেন? ৭ দিনের মধ্যে ফেরত আনা যাবে।"))return;
+  p.entries=p.entries.filter(function(x){return x.id!==id});p.trash.push({id:"t"+Date.now(),at:Date.now(),k:"e",e:e});save();render();
+}
+function addFund(){var n=document.getElementById("nf").value.trim();if(!n)return alert("ফান্ডের নাম লিখুন");var p=me();p.funds.push({id:"x"+Date.now().toString(36),name:n,type:document.getElementById("nft").value});save();render()}
+function renFund(id){var f=fund(id),n=prompt("ফান্ডের নাম",f.name);if(n&&n.trim())f.name=n.trim();if(confirm("ফান্ডের ধরন বদলে “"+(f.type==="own"?"আমানত (পেয়েছি/খরচ)":"ব্যক্তিগত (আয়/খরচ)")+"” করবেন? (শুধু লেখার ধরন বদলায়, হিসাব নয়)"))f.type=f.type==="own"?"trust":"own";save();render()}
+function delFund(id){
+  var p=me(),f=fund(id);if(p.funds.length<2)return alert("কমপক্ষে একটি ফান্ড রাখতে হবে");
+  if(!confirm("“"+f.name+"” ফান্ড ও এর সব হিসাব “সম্প্রতি মুছে ফেলা” তে যাবে। ৭ দিনের মধ্যে ফেরত আনা যাবে।"))return;
+  var es=p.entries.filter(function(e){return e.w===id}),cs={in:p.cats[id+"in"],out:p.cats[id+"out"]};
+  p.entries=p.entries.filter(function(e){return e.w!==id});p.funds=p.funds.filter(function(x){return x.id!==id});delete p.cats[id+"in"];delete p.cats[id+"out"];
+  p.trash.push({id:"t"+Date.now(),at:Date.now(),k:"f",f:f,es:es,cs:cs});if(VW===id)VW=p.funds[0].id;save();render();
+}
+function restoreT(id){
+  var p=me(),t=p.trash.find(function(x){return x.id===id});if(!t)return;
+  if(t.k==="e"){if(!fund(t.e.w))return alert("এই এন্ট্রির ফান্ডটি এখন নেই। আগে ফান্ডটি ফিরিয়ে আনুন।");if(!findE(t.e.id))p.entries.push(t.e)}
+  else{if(!fund(t.f.id)){p.funds.push(t.f);if(t.cs.in)p.cats[t.f.id+"in"]=t.cs.in;if(t.cs.out)p.cats[t.f.id+"out"]=t.cs.out}t.es.forEach(function(e){if(!findE(e.id))p.entries.push(e)})}
+  p.trash=p.trash.filter(function(x){return x.id!==id});save();render();
+}
+function permDel(id){if(!confirm("স্থায়ীভাবে মুছবেন? এটা আর ফেরত আনা যাবে না, Firebase সার্ভার থেকেও মুছে যাবে।"))return;var p=me();p.trash=p.trash.filter(function(x){return x.id!==id});save();render()}
+var CF=null;
+function catAdd(t){var n=document.getElementById("nc"+t).value.trim();if(!n)return;var a=getCats(CF,t);if(a.indexOf(n)<0)a.push(n);save();render()}
+function delCat(w,t,i){var a=getCats(w,t);if(a.length<2)return alert("কমপক্ষে একটি ক্যাটাগরি রাখতে হবে");if(!confirm("“"+a[i]+"” মুছবেন? আগের এন্ট্রি যেমন আছে তেমনই থাকবে।"))return;a.splice(i,1);save();render()}
+function renCat(w,t,i){var a=getCats(w,t),o=a[i],n=prompt("ক্যাটাগরির সঠিক নাম",o);if(!n||!n.trim()||n.trim()===o)return;n=n.trim();me().entries.forEach(function(e){if(e.w===w&&e.t===t&&e.c===o)e.c=n});if(a.indexOf(n)>=0)a.splice(i,1);else a[i]=n;save();render()}
 function doLogout(){if(confirm("লগআউট করবেন? আবার ঢুকতে গুগল দিয়ে সাইন-ইন করতে হবে।"))auth.signOut()}
 function renProf(){var p=me(),n=prompt("প্রোফাইলের নতুন নাম",p.name);if(n&&n.trim()){p.name=n.trim();save();render()}}
+function back(){return '<button class="lk" onclick="go(\'more\')">← অ্যাকাউন্ট</button>'}
+function mi(t,a,b){return '<button class="pf" onclick="go(\''+t+'\')"><b>'+a+'</b><span class="mut">'+b+'</span></button>'}
 function more(){
-  var h='';
+  var p=me(),h='';
   if(cloud&&user)h+='<div class="card"><div class="row">'+(user.photoURL?'<img src="'+esc(user.photoURL)+'" alt="" referrerpolicy="no-referrer" style="width:48px;height:48px;border-radius:50%">':'')+'<div><b>'+esc(user.displayName||"")+'</b><div class="mut">'+esc(user.email||"")+'</div></div></div><div class="mut" id="st" style="margin-top:8px">'+st+'</div><button class="btn o" style="color:var(--r)" onclick="doLogout()">লগআউট</button></div>';
   else if(!cloud)h+='<div class="card mut">ক্লাউড চালু নেই, ডেটা শুধু এই ফোনে জমা হচ্ছে।</div>';
   h+='<h2>প্রোফাইল</h2><div class="card">';
   S.profiles.forEach(function(q){var c=q.id===S.cur;h+='<button class="pf" onclick="pick(\''+q.id+'\')"><b>'+esc(q.name)+'</b><span class="'+(c?"in":"mut")+'">'+(c?"✓ চলমান":"সুইচ করুন")+'</span></button>'});
   h+='<label>নতুন প্রোফাইল</label><input id="pn" placeholder="নাম"><button class="btn" onclick="addProf()">প্রোফাইল যোগ করুন</button><div class="row"><button class="btn o" onclick="renProf()">নাম বদলান</button><button class="btn o" style="color:var(--r)" onclick="delProf()">মুছুন</button></div></div>';
-  if(cloud&&user)h+='<div class="card"><b>পাসওয়ার্ড ও নিরাপত্তা</b><p class="mut">লগইন গুগলের মাধ্যমে হয়, তাই পাসওয়ার্ড ও 2-Step Verification গুগল অ্যাকাউন্টে বদলাতে হবে।</p><a class="btn o" style="display:block;text-align:center;text-decoration:none" href="https://myaccount.google.com/security" target="_blank" rel="noopener">গুগল অ্যাকাউন্ট সেটিংস</a></div>';
-  h+='<div class="card"><b>ডেটা ব্যাকআপ</b><p class="mut">ক্লাউডের পাশাপাশি মাঝে মাঝে ফাইল ব্যাকআপ রাখা ভালো।</p><button class="btn" onclick="exp()">সব প্রোফাইলের ব্যাকআপ নামান</button><label>ব্যাকআপ ফাইল ফেরত আনুন</label><input type="file" accept=".json" onchange="imp(this)"></div>';
+  h+='<h2>অ্যাকাউন্ট</h2><div class="card">'+mi("set","সেটিংস","ফান্ড, ক্যাটাগরি ও কাস্টমাইজেশন")+mi("trash","সম্প্রতি মুছে ফেলা ("+bn(p.trash.length)+")","৭ দিন পর স্থায়ীভাবে মুছে যায়")+mi("about","About","অ্যাপের পরিচিতি ও উদ্দেশ্য")+mi("privacy","গোপনীয়তা নীতি","Privacy Policy")+mi("terms","ব্যবহারের শর্তাবলি","Terms & Conditions")+'<a class="pf" style="text-decoration:none;color:inherit" href="mailto:mr.abdurrahman.jami@gmail.com"><b>Support</b><span class="mut">ইমেইল করুন</span></a><button class="pf" disabled style="opacity:.55"><b>পাসওয়ার্ড ও নিরাপত্তা</b><span class="mut">শীঘ্রই আসছে</span></button></div>';
+  h+='<h2>ব্যাকআপ</h2><div class="card">'+bkInfo()+'<button class="btn" onclick="bkAll()">সব ফান্ডের ব্যাকআপ</button>'+p.funds.map(function(f){return '<button class="btn o" onclick="bkFund(\''+f.id+'\')">শুধু “'+esc(f.name)+'” এর ব্যাকআপ</button>'}).join("")+'<label>ব্যাকআপ ফাইল ফেরত আনুন (আগের ডেটা মুছবে না, যা নেই শুধু তা যোগ হবে)</label><input type="file" accept=".json" onchange="imp(this)"></div>';
   return h;
 }
-function exp(){var b=new Blob([JSON.stringify(S)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="hisab-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove()}
-function imp(i){var f=i.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);if(!d.profiles)throw 0;if(!confirm("বর্তমান সব ডেটা বদলে ব্যাকআপের ডেটা বসবে। নিশ্চিত?"))return;S=d;S.cur=null;save();render()}catch(e){alert("ফাইলটি সঠিক ব্যাকআপ নয়")}};r.readAsText(f)}
+function settings(){
+  var p=me();if(!fund(CF))CF=p.funds[0].id;
+  var h=back()+'<h2>সেটিংস</h2><div class="card"><b>ফান্ড</b>'+p.funds.map(function(f){return '<div class="item"><div><b>'+esc(f.name)+'</b><div class="mut">'+(f.type==="own"?"ব্যক্তিগত ধরন (আয়/খরচ)":"আমানত ধরন (পেয়েছি/খরচ)")+'</div></div><div class="row"><button class="btn o" style="margin:0;width:auto;padding:7px 12px" onclick="renFund(\''+f.id+'\')">✎</button><button class="btn o" style="margin:0;width:auto;padding:7px 12px;color:var(--r)" onclick="delFund(\''+f.id+'\')">মুছুন</button></div></div>'}).join("")+'<label>নতুন ফান্ডের নাম</label><input id="nf" placeholder="যেমন: মসজিদ ফান্ড"><select id="nft"><option value="trust">আমানত ধরন (পেয়েছি/খরচ)</option><option value="own">ব্যক্তিগত ধরন (আয়/খরচ)</option></select><button class="btn" onclick="addFund()">ফান্ড তৈরি করুন</button></div>';
+  h+='<div class="card"><b>ক্যাটাগরি</b><label>কোন ফান্ডের?</label><select onchange="CF=this.value;render()">'+p.funds.map(function(f){return '<option value="'+f.id+'"'+(f.id===CF?' selected':'')+'>'+esc(f.name)+'</option>'}).join("")+'</select><div class="mut" style="margin-top:6px">✎ চাপলে নাম ঠিক হবে (আগের এন্ট্রির নামও বদলাবে), × চাপলে ক্যাটাগরি মুছবে।</div></div>';
+  var o=isOwn(CF);
+  [["in",o?"আয়ের ক্যাটাগরি":"টাকা পাওয়ার ক্যাটাগরি"],["out","খরচের ক্যাটাগরি"]].forEach(function(g){var t=g[0];h+='<div class="card"><b>'+g[1]+'</b><div>'+getCats(CF,t).map(function(c,i){return '<span class="chip">'+esc(c)+'<button style="color:var(--g)" onclick="renCat(\''+CF+'\',\''+t+'\','+i+')">✎</button><button onclick="delCat(\''+CF+'\',\''+t+'\','+i+')">×</button></span>'}).join("")+'</div><div class="row" style="margin-top:10px"><input id="nc'+t+'" placeholder="নতুন ক্যাটাগরি"><button class="btn" style="width:auto;margin:4px 0 0;padding:11px 16px" onclick="catAdd(\''+t+'\')">যোগ</button></div></div>'});
+  return h;
+}
+function trashScr(){
+  var p=me(),h=back()+'<h2>সম্প্রতি মুছে ফেলা</h2><p class="mut">এখানের ডেটা ৭ দিন পর নিজে থেকে স্থায়ীভাবে মুছে যায়। স্থায়ীভাবে মুছলে আর ফেরত আনা যায় না।</p>';
+  if(!p.trash.length)h+='<div class="empty">কিছু নেই</div>';
+  p.trash.slice().reverse().forEach(function(t){
+    var left=Math.max(1,Math.ceil((t.at+7*864e5-Date.now())/864e5)),ti=t.k==="e"?esc(t.e.n||t.e.c)+' · ৳'+bn(t.e.a):'ফান্ড: '+esc(t.f.name)+' ('+bn(t.es.length)+' এন্ট্রি)';
+    h+='<div class="card"><b>'+ti+'</b><div class="mut">'+bn(left)+' দিন বাকি</div><div class="row"><button class="btn o" style="margin:8px 0 0" onclick="restoreT(\''+t.id+'\')">ফিরিয়ে আনুন</button><button class="btn o" style="margin:8px 0 0;color:var(--r)" onclick="permDel(\''+t.id+'\')">স্থায়ীভাবে মুছুন</button></div></div>';
+  });
+  if(p.trash.length)h+=bkInfo()+'<button class="btn" onclick="bkTrash()">মুছে ফেলা ডেটার ব্যাকআপ নামান</button>';
+  return h;
+}
+var EM="mr.abdurrahman.jami@gmail.com";
+function doc(t,sub,secs){
+  var h=back()+'<h2>'+t+'</h2>'+(sub?'<p class="mut">'+sub+'</p>':'');
+  secs.forEach(function(x){h+='<div class="card">'+(x[0]?'<b>'+x[0]+'</b>':'')+x.slice(1).map(function(p){return Array.isArray(p)?'<ul style="margin:8px 0;padding-left:20px">'+p.map(function(l){return '<li>'+l+'</li>'}).join("")+'</ul>':'<p style="margin:8px 0 0">'+p+'</p>'}).join("")+'</div>'});
+  return h.split(EM).join('<a href="mailto:'+EM+'">'+EM+'</a>');
+}
+function aboutScr(){
+  return doc("আমার হিসাব","আপনার হিসাব, আপনার নিয়ন্ত্রণে।",[
+  ["About","আমার হিসাব একটি আধুনিক ও ব্যবহারবান্ধব হিসাব ব্যবস্থাপনা অ্যাপ। ব্যক্তিগত আয়-ব্যয়, সঞ্চয়, একাধিক ফান্ড এবং দৈনন্দিন আর্থিক হিসাব সহজে সংরক্ষণ ও পরিচালনা করার উদ্দেশ্যে অ্যাপটি তৈরি করা হয়েছে।"],
+  ["আমাদের লক্ষ্য","হিসাব ব্যবস্থাপনাকে সহজ, সুশৃঙ্খল ও নির্ভরযোগ্য করে তোলা, যাতে ব্যবহারকারীরা তাঁদের আর্থিক তথ্য এক জায়গায় সহজে পরিচালনা করতে পারেন।"],
+  ["আমাদের সুবিধাসমূহ",["একাধিক ফান্ড তৈরি ও পরিচালনা।","আয়-ব্যয়ের হিসাব এবং ক্যাটাগরি ব্যবস্থাপনা।","ফান্ডভিত্তিক হিসাব সংরক্ষণ।","ব্যাকআপ ও ডেটা পুনরুদ্ধারের সুবিধা।","ভুল করে মুছে ফেলা তথ্য পুনরুদ্ধারের ব্যবস্থা।","সহজ সেটিংস ও কাস্টমাইজেশন।","দ্রুত ও স্বাচ্ছন্দ্যপূর্ণ ব্যবহার অভিজ্ঞতা।"]],
+  ["তথ্যের নিরাপত্তা","ব্যবহারকারীর তথ্য, গোপনীয়তা ও নিরাপত্তাকে আমরা সর্বোচ্চ গুরুত্ব দিই। তথ্যের অননুমোদিত ব্যবহার ও প্রবেশ ঠেকাতে উপযুক্ত নিরাপত্তাব্যবস্থা বজায় রাখা এবং উন্নত করাই আমাদের অঙ্গীকার।"],
+  ["ডেভেলপার","AR Development & Technology"],
+  ["অ্যাপের তথ্য",["অ্যাপের নাম: আমার হিসাব","ভার্সন: 1.0.4","সাপোর্ট ইমেইল: "+EM]],
+  ["","আপনার আস্থা ও সহযোগিতার জন্য ধন্যবাদ। আপনার হিসাব হোক আরও সহজ, গোছানো ও নিয়ন্ত্রিত।"]
+  ])+mi("privacy","গোপনীয়তা নীতি","Privacy Policy")+mi("terms","ব্যবহারের শর্তাবলি","Terms & Conditions");
+}
+function privacyScr(){
+  return doc("গোপনীয়তা নীতি (Privacy Policy)","কার্যকর তারিখ: ২৯ অক্টোবর ২০২৬ · অ্যাপের নাম: আমার হিসাব · ডেভেলপার: AR Development & Technology",[
+  ["১. ভূমিকা","আমার হিসাব অ্যাপ ব্যবহারকারীদের ব্যক্তিগত হিসাব ও আর্থিক তথ্য পরিচালনার সুবিধা দেয়। ব্যবহারকারীর গোপনীয়তা, তথ্যের নিরাপত্তা এবং সেবার নির্ভরযোগ্যতা রক্ষা করা আমাদের গুরুত্বপূর্ণ দায়িত্ব।"],
+  ["২. কী ধরনের তথ্য সংরক্ষণ করা হতে পারে?","অ্যাপের ব্যবহার ও চালু থাকা ফিচার অনুযায়ী নিম্নলিখিত তথ্য সংরক্ষিত হতে পারে:",["ফান্ড, আয়-ব্যয় ও লেনদেনের তথ্য।","ব্যবহারকারীর তৈরি করা ক্যাটাগরি ও হিসাবের বিবরণ।","অ্যাকাউন্ট পরিচালনার জন্য প্রয়োজনীয় পরিচয়সংক্রান্ত তথ্য।","ব্যাকআপ, পুনরুদ্ধার ও অ্যাপের সেটিংস-সংক্রান্ত তথ্য।"]],
+  ["৩. তথ্য কীভাবে ব্যবহার করা হয়?","সংরক্ষিত তথ্য ব্যবহার করা হয়:",["হিসাব সংরক্ষণ ও প্রদর্শনের জন্য।","ফান্ড ও ক্যাটাগরি পরিচালনার জন্য।","ব্যাকআপ এবং তথ্য পুনরুদ্ধারের সুবিধা দেওয়ার জন্য।","অ্যাপের কার্যকারিতা ও নিরাপত্তা উন্নত করার জন্য।","ব্যবহারকারীর অনুরোধ অনুযায়ী সাপোর্ট দেওয়ার জন্য।"]],
+  ["৪. তথ্যের নিরাপত্তা","ব্যবহারকারীর তথ্যের গোপনীয়তা ও নিরাপত্তা রক্ষায় আমরা যথাযথ প্রযুক্তিগত ও সাংগঠনিক ব্যবস্থা গ্রহণ এবং উন্নত করার অঙ্গীকার করি।","অ্যাপের তথ্য Google Firebase-এর সংশ্লিষ্ট সেবায় সংরক্ষিত হলে, সেই সেবার নিরাপত্তাব্যবস্থা ও আমাদের কনফিগার করা নিয়ম অনুযায়ী তথ্য পরিচালিত হবে।","তবে কোনো অনলাইন সিস্টেমেই সব ধরনের ঝুঁকি সম্পূর্ণ নির্মূল করার নিশ্চয়তা দেওয়া সম্ভব নয়। তাই আমরা নিরাপত্তা জোরদার করার জন্য প্রয়োজনীয় ব্যবস্থা গ্রহণে প্রতিশ্রুতিবদ্ধ।"],
+  ["৫. তথ্যের গোপনীয়তা","ব্যবহারকারীর ব্যক্তিগত তথ্য বিক্রি বা বাণিজ্যিক উদ্দেশ্যে অন্যের কাছে হস্তান্তর করা আমাদের উদ্দেশ্য নয়। অ্যাপ পরিচালনা, নিরাপত্তা, আইনগত বাধ্যবাধকতা অথবা ব্যবহারকারীর অনুমোদিত সেবার জন্য তথ্য প্রক্রিয়াকরণের প্রয়োজন হলে তা প্রযোজ্য আইন ও গোপনীয়তার নীতি অনুসারে পরিচালিত হবে।"],
+  ["৬. ব্যাকআপ ও তথ্য মুছে ফেলা","ব্যবহারকারী অ্যাপের সুবিধা অনুযায়ী ব্যাকআপ নিতে এবং সংরক্ষিত তথ্য পুনরুদ্ধার করতে পারবেন।","Recently Deleted বিভাগে থাকা তথ্য নির্ধারিত সময়ের মধ্যে পুনরুদ্ধার করা যেতে পারে। Permanent Delete করলে সংশ্লিষ্ট তথ্য স্থায়ীভাবে মুছে ফেলার প্রক্রিয়া শুরু হবে। স্বয়ংক্রিয়ভাবে মুছে ফেলার নিয়মও প্রযোজ্য হবে।","তবে আলাদা ব্যাকআপ ফাইল বা অন্য কোনো সংরক্ষিত কপিতে তথ্য থেকে যেতে পারে। সেগুলো প্রযোজ্য নিয়ম অনুযায়ী আলাদাভাবে মুছে ফেলতে হতে পারে।"],
+  ["৭. শিশুদের গোপনীয়তা","অ্যাপটি শিশুদের ব্যবহারের জন্য তৈরি বা অনুমোদিত হলে তাদের তথ্য সংগ্রহ ও ব্যবহারের ক্ষেত্রে প্রযোজ্য আইন অনুসরণ করতে হবে। শিশুদের বিষয়ে প্রযোজ্য শর্ত নির্ধারণ না হওয়া পর্যন্ত অপ্রয়োজনীয় ব্যক্তিগত তথ্য সংগ্রহ করা হবে না।"],
+  ["৮. নীতিমালার পরিবর্তন","অ্যাপের ফিচার, নিরাপত্তাব্যবস্থা বা প্রযোজ্য আইন পরিবর্তিত হলে এই গোপনীয়তা নীতি হালনাগাদ করা হতে পারে। গুরুত্বপূর্ণ পরিবর্তন হলে ব্যবহারকারীদের যথাসম্ভব জানানো হবে।"],
+  ["৯. যোগাযোগ","গোপনীয়তা, তথ্যের নিরাপত্তা বা ব্যক্তিগত তথ্য-সংক্রান্ত প্রশ্নের জন্য যোগাযোগ করুন:","AR Development & Technology","ইমেইল: "+EM]
+  ]);
+}
+function termsScr(){
+  return doc("ব্যবহারের শর্তাবলি (Terms & Conditions)","অ্যাপের নাম: আমার হিসাব · ডেভেলপার: AR Development & Technology · ভার্সন: 1.0.4",[
+  ["১. শর্তাবলিতে সম্মতি","আমার হিসাব অ্যাপ ব্যবহার করার মাধ্যমে ব্যবহারকারী এই শর্তাবলি মেনে চলতে সম্মত হন। শর্তাবলিতে সম্মত না হলে অ্যাপ ব্যবহার বন্ধ রাখতে পারেন।"],
+  ["২. অ্যাপের ব্যবহার","অ্যাপটি ব্যক্তিগত হিসাব, আয়-ব্যয়, সঞ্চয় এবং ফান্ড ব্যবস্থাপনার সহায়ক হিসেবে তৈরি করা হয়েছে। ব্যবহারকারীকে নিজের তথ্য সঠিকভাবে সংরক্ষণ ও পরিচালনা করতে হবে।"],
+  ["৩. ব্যবহারকারীর তথ্য","ব্যবহারকারীর সংরক্ষিত হিসাবের সঠিকতা যাচাই করার দায়িত্ব ব্যবহারকারীর। অ্যাপটি হিসাব পরিচালনার সুবিধা দেয়; এটি কোনো ব্যাংক, আর্থিক প্রতিষ্ঠান বা পেশাদার আর্থিক পরামর্শদাতার বিকল্প নয়।"],
+  ["৪. ব্যাকআপ ও তথ্য পুনরুদ্ধার","ব্যাকআপ সুবিধা নির্ধারিত সীমা ও অ্যাপের কার্যকারিতা অনুযায়ী ব্যবহার করা যাবে। গুরুত্বপূর্ণ তথ্যের ব্যাকআপ নিরাপদ স্থানে সংরক্ষণ করার পরামর্শ দেওয়া হচ্ছে।","ব্যাকআপ ফাইল সঠিকভাবে সংরক্ষণ না করা, ফাইল নষ্ট হওয়া, ভুল ফাইল ইমপোর্ট করা বা স্থায়ীভাবে ডিলিট করা তথ্য পুনরুদ্ধার করা সম্ভব না-ও হতে পারে।"],
+  ["৫. তথ্য মুছে ফেলা","Recently Deleted বিভাগ থেকে নির্ধারিত সময়ের মধ্যে তথ্য পুনরুদ্ধার করা যেতে পারে। Permanent Delete করলে সংশ্লিষ্ট তথ্য স্থায়ীভাবে মুছে ফেলা হবে। ব্যবহারকারীকে স্থায়ীভাবে মুছে ফেলার আগে তথ্য যাচাই করতে হবে।"],
+  ["৬. নিরাপত্তা","ব্যবহারকারীর তথ্য সুরক্ষিত রাখতে ডেভেলপার যথাযথ নিরাপত্তাব্যবস্থা বজায় রাখার চেষ্টা করবে। ব্যবহারকারীকেও নিজের অ্যাকাউন্টের পরিচয়সংক্রান্ত তথ্য ও ব্যাকআপ ফাইল নিরাপদ রাখতে হবে।"],
+  ["৭. অপব্যবহার নিষিদ্ধ","অ্যাপের নিরাপত্তা নষ্ট করা, অননুমোদিতভাবে অন্যের তথ্য ব্যবহার করা, সেবায় বিঘ্ন সৃষ্টি করা বা বেআইনি কাজে অ্যাপ ব্যবহার করা যাবে না।"],
+  ["৮. সেবা ও আপডেট","অ্যাপের কার্যকারিতা উন্নত করতে নতুন ফিচার, সংশোধন বা আপডেট যুক্ত হতে পারে। রক্ষণাবেক্ষণ বা প্রযুক্তিগত সমস্যার কারণে কোনো কোনো সেবা সাময়িকভাবে বিঘ্নিত হতে পারে।"],
+  ["৯. দায়বদ্ধতা","প্রযোজ্য আইন যতটুকু অনুমতি দেয়, সেই সীমার মধ্যে অ্যাপের ব্যবহার, ব্যবহারকারীর সংরক্ষিত তথ্য এবং সেবায় বিঘ্নের সঙ্গে সম্পর্কিত দায়বদ্ধতা নির্ধারিত হবে। আইন অনুযায়ী যে দায়বদ্ধতা বাদ দেওয়া যায় না, এই শর্তাবলি তা বাদ দেয় না।"],
+  ["১০. শর্তাবলির পরিবর্তন","প্রয়োজন অনুযায়ী এই শর্তাবলি হালনাগাদ করা হতে পারে। গুরুত্বপূর্ণ পরিবর্তনের ক্ষেত্রে ব্যবহারকারীদের জানানো হবে।"],
+  ["১১. যোগাযোগ","শর্তাবলি বা অ্যাপের সেবা সম্পর্কে প্রশ্ন থাকলে যোগাযোগ করুন:","AR Development & Technology","ইমেইল: "+EM]
+  ]);
+}
+function bkLeft(){return 2-(S.meta.bk[today().slice(0,7)]||0)}
+function bkInfo(){return '<p class="mut">এ মাসে ব্যাকআপ নেওয়া বাকি: '+bn(bkLeft())+'/২ (সব ধরনের ব্যাকআপ মিলিয়ে)</p>'}
+function bkSave(name,data){
+  if(bkLeft()<1)return alert("এ মাসে ২ বার ব্যাকআপ নেওয়া হয়ে গেছে। আগামী মাসে আবার নিতে পারবেন।");
+  if(!confirm("এটা এ মাসের ২ বারের একটি ব্যাকআপ হিসেবে গণ্য হবে। নামাবেন?"))return;
+  var m=today().slice(0,7);S.meta.bk[m]=(S.meta.bk[m]||0)+1;save();
+  var b=new Blob([JSON.stringify(data)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="hisab-"+name+"-"+today()+".json";document.body.appendChild(a);a.click();a.remove();render();
+}
+function pk(p,fs,es){var c={};fs.forEach(function(f){["in","out"].forEach(function(t){if(p.cats[f.id+t])c[f.id+t]=p.cats[f.id+t]})});return {app:"hisab",v:2,at:today(),pid:p.id,pname:p.name,funds:fs,cats:c,entries:es}}
+function bkAll(){var p=me();bkSave("all",pk(p,p.funds,p.entries))}
+function bkFund(id){var p=me();bkSave("fund",pk(p,[fund(id)],p.entries.filter(function(e){return e.w===id})))}
+function bkTrash(){var p=me(),fs=[],es=[];p.trash.forEach(function(t){if(t.k==="e")es.push(t.e);else{fs.push(t.f);es=es.concat(t.es)}});var d=pk(p,fs,es);p.trash.forEach(function(t){if(t.k==="f"){["in","out"].forEach(function(x){if(t.cs[x])d.cats[t.f.id+x]=t.cs[x]})}});bkSave("deleted",d)}
+function legacy(p){return {pid:p.id,pname:p.name,funds:p.funds,cats:p.cats||{},entries:p.entries||[]}}
+function merge(ps){
+  var n={e:0,f:0,c:0,s:0};
+  ps.forEach(function(x){
+    var p=S.profiles.find(function(q){return q.id===x.pid})||S.profiles.find(function(q){return q.name===x.pname});
+    if(!p){p={id:x.pid||"p"+Date.now(),name:x.pname||"আমদানি",entries:[]};ens(p);S.profiles.push(p)}
+    (x.funds||[]).forEach(function(f){if(!p.funds.some(function(g){return g.id===f.id})){p.funds.push({id:f.id,name:f.name,type:f.type||"own"});n.f++}});
+    Object.keys(x.cats||{}).forEach(function(k){var a=p.cats[k]||(p.cats[k]=[]);x.cats[k].forEach(function(c){if(a.indexOf(c)<0){a.push(c);n.c++}})});
+    (x.entries||[]).forEach(function(e){
+      if(p.entries.some(function(y){return y.id===e.id})){n.s++;return}
+      p.trash=p.trash.filter(function(t){return !(t.k==="e"&&t.e.id===e.id)});
+      if(!p.funds.some(function(g){return g.id===e.w}))p.funds.push({id:e.w,name:e.w==="p"?"ব্যক্তিগত":e.w==="f"?"প্রতিষ্ঠান ফান্ড":"ফান্ড",type:e.w==="f"?"trust":"own"});
+      p.entries.push(e);n.e++;
+    });
+    p.trash=p.trash.filter(function(t){return !(t.k==="f"&&p.funds.some(function(g){return g.id===t.f.id}))});
+  });
+  return "পুনরুদ্ধার সম্পন্ন।\nনতুন এন্ট্রি: "+bn(n.e)+"\nনতুন ফান্ড: "+bn(n.f)+"\nনতুন ক্যাটাগরি: "+bn(n.c)+"\nআগে থেকেই ছিল (বাদ): "+bn(n.s);
+}
+function imp(i){
+  var f=i.files[0];if(!f)return;var r=new FileReader();
+  r.onload=function(){try{
+    var d=JSON.parse(r.result),ps=d.profiles?d.profiles.map(legacy):[d];
+    if(!ps.length||ps.some(function(x){return !x.entries}))throw 0;
+    if(!confirm("ব্যাকআপ থেকে যা নেই শুধু তা যোগ হবে, আগের কিছু মুছবে না। এগোবেন?"))return;
+    var m=merge(ps);save();render();alert(m);
+  }catch(e){alert("ফাইলটি সঠিক ব্যাকআপ নয়")}i.value=""};
+  r.readAsText(f);
+}
 function delProf(){if(!confirm("এই প্রোফাইল ও এর সব হিসাব স্থায়ীভাবে মুছে যাবে। নিশ্চিত?"))return;S.profiles=S.profiles.filter(function(p){return p.id!==S.cur});S.cur=null;save();render()}
-function report(){
-  var es=me().entries.filter(function(e){return e.w==="f"}).sort(function(a,b){return a.d.localeCompare(b.d)}),bal=0;
+function report(fw){
+  var es=me().entries.filter(function(e){return e.w===fw}).sort(function(a,b){return a.d.localeCompare(b.d)}),bal=0;
   var rows=es.map(function(e){bal+=e.t==="in"?e.a:-e.a;return"<tr><td>"+e.d+"</td><td>"+esc(e.c)+(e.n?" ("+esc(e.n)+")":"")+"</td><td>"+(e.t==="in"?e.a:"")+"</td><td>"+(e.t==="out"?e.a:"")+"</td><td>"+bal+"</td></tr>"}).join("");
   var w=window.open("","_blank");
   if(!w)return alert("নতুন ট্যাব খুলতে দিন, তারপর আবার চেষ্টা করুন");
-  w.document.write('<meta charset="utf-8"><title>ফান্ড রিপোর্ট</title><style>body{font-family:sans-serif;padding:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:6px;font-size:14px;text-align:left}</style><h2>প্রতিষ্ঠান ফান্ডের হিসাব — '+esc(me().name)+'</h2><table><tr><th>তারিখ</th><th>বিবরণ</th><th>প্রাপ্তি</th><th>খরচ</th><th>বাকি</th></tr>'+rows+'</table><h3>বর্তমান বাকি: ৳'+bal+'</h3><button onclick="print()">প্রিন্ট / PDF</button>');
+  w.document.write('<meta charset="utf-8"><title>ফান্ড রিপোর্ট</title><style>body{font-family:sans-serif;padding:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:6px;font-size:14px;text-align:left}</style><h2>'+esc(fname(fw))+' — '+esc(me().name)+'</h2><table><tr><th>তারিখ</th><th>বিবরণ</th><th>প্রাপ্তি</th><th>খরচ</th><th>বাকি</th></tr>'+rows+'</table><h3>বর্তমান বাকি: ৳'+bal+'</h3><button onclick="print()">প্রিন্ট / PDF</button>');
   w.document.close();
 }
 load();render();initCloud();
