@@ -54,6 +54,9 @@ nav button.on{background:var(--g);border-color:var(--g);color:#fff}
 .chip{display:inline-flex;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:6px 4px 6px 12px;margin:6px 6px 0 0}
 .chip button{border:0;background:none;color:var(--r);font-size:18px;line-height:1;padding:0 8px}
 #toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;font-size:14px;max-width:90%;text-align:center}#toast.show{opacity:.95}
+.lg{max-width:420px;margin:8px auto}.logo{width:68px;height:68px;border-radius:20px;background:var(--g);display:flex;align-items:center;justify-content:center;margin:18px auto 8px}
+.pw{position:relative}.pw input{padding-right:70px}.pw button{position:absolute;right:6px;top:8px;border:0;background:none;color:var(--g);font-weight:700;padding:8px}
+.err{color:var(--r);font-size:14px;margin-top:10px}.ok{color:var(--g);font-size:14px;margin-top:10px}.dv{display:flex;align-items:center;gap:10px;color:var(--mut);margin:16px 0 4px}.dv:before,.dv:after{content:"";flex:1;height:1px;background:var(--line)}
 .sr{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
 .sr.tot{border-bottom:0;border-top:2px solid var(--line);margin-top:2px;padding-top:12px}
 .msel{width:auto;max-width:70%;border:0;background:transparent;font-weight:700;font-size:17px;text-align:center;margin:0}
@@ -69,7 +72,7 @@ nav button.on{background:var(--g);border-color:var(--g);color:#fff}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 var KEY="hisab_v1",S={profiles:[],cur:null},tab="home",month=today().slice(0,7);
-var F={w:"p",t:"out",c:"",a:"",d:today(),n:""};
+var F={w:"p",t:"out",c:"",a:"",d:today(),n:"",s:"",sm:+today().slice(5,7),sy:+today().slice(0,4)};
 function load(){try{var r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}}
 function saveLocal(){if(DEMO)return;try{localStorage.setItem(lk(),JSON.stringify(S))}catch(e){alert("ডেটা সেভ করা যায়নি। ব্রাউজারের স্টোরেজ বন্ধ থাকতে পারে।")}}
 /* ===== Firebase সেটিং: নিচের ৪টি মান নিজের প্রজেক্টের কোড দিয়ে বদলান ===== */
@@ -97,8 +100,59 @@ function initCloud(){
     }).catch(function(){S=readLS(c);setCur();ready=true;render()});
   });
 }
-function loginScr(){return '<h1>আমার হিসাব</h1><div class="card"><p>গুগল অ্যাকাউন্ট দিয়ে ঢুকুন। আপনার হিসাব আপনার অ্যাকাউন্টে জমা থাকবে, ফোন বদলালেও নতুন ফোনে ঢুকলেই ফেরত পাবেন। প্রত্যেকের হিসাব আলাদা।</p><button class="btn" onclick="gin()">গুগল দিয়ে সাইন-ইন করুন</button>'+((location.hostname||"").indexOf("github.io")<0&&(location.hostname||"").indexOf("localhost")<0?'<button class="btn o" onclick="startDemo()">ডেমো দেখুন (লগইন ছাড়া)</button>':'')+'</div>'}
-function gin(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){alert("সাইন-ইন হয়নি: "+e.code)})}
+var LM="in",LERR="",LMSG="",SHOW=false,LV={e:"",p:"",p2:""},SECE="",SECM="";
+function gv(id){var e=document.getElementById(id);return e?e.value:""}
+function lkeep(){if(document.getElementById("le")){LV.e=gv("le").trim();LV.p=gv("lp");LV.p2=gv("lp2")}}
+function lm(m){lkeep();LM=m;LERR="";LMSG="";render()}
+function lshow(){lkeep();SHOW=!SHOW;render()}
+function aerr(e){var c=(e&&e.code)||"",m={"auth/invalid-credential":"ইমেইল বা পাসওয়ার্ড ঠিক নয়।","auth/wrong-password":"পাসওয়ার্ড ঠিক নয়।","auth/user-not-found":"এই ইমেইলে কোনো অ্যাকাউন্ট নেই।","auth/invalid-email":"ইমেইলের ঠিকানাটি সঠিক নয়।","auth/email-already-in-use":"এই ইমেইলে আগেই অ্যাকাউন্ট আছে। সাইন-ইন করুন।","auth/weak-password":"পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।","auth/too-many-requests":"অনেকবার চেষ্টা হয়েছে। একটু পরে আবার চেষ্টা করুন।","auth/network-request-failed":"ইন্টারনেট সংযোগ নেই।","auth/popup-closed-by-user":"সাইন-ইন বাতিল হয়েছে।","auth/account-exists-with-different-credential":"এই ইমেইলে অন্য পদ্ধতিতে অ্যাকাউন্ট আছে। সেই পদ্ধতিতে ঢুকে ‘পাসওয়ার্ড ও নিরাপত্তা’ থেকে এটি যোগ করুন।","auth/unauthorized-domain":"এই ঠিকানা থেকে সাইন-ইনের অনুমতি নেই।","auth/requires-recent-login":"নিরাপত্তার জন্য আবার সাইন-ইন করে চেষ্টা করুন।","auth/credential-already-in-use":"এই পদ্ধতি অন্য অ্যাকাউন্টে যুক্ত আছে।","auth/provider-already-linked":"পাসওয়ার্ড আগেই যুক্ত আছে।","auth/operation-not-allowed":"এই সাইন-ইন পদ্ধতি এখনো চালু করা হয়নি।"};return m[c]||"সমস্যা হয়েছে ("+c+")"}
+function lfail(e){LERR=aerr(e);LMSG="";render()}
+function emailGo(){
+  lkeep();var em=LV.e,pw=LV.p;LERR="";LMSG="";
+  if(!em||!pw){LERR="ইমেইল ও পাসওয়ার্ড দিন।";return render()}
+  if(LM==="up"){
+    if(pw.length<6){LERR=aerr({code:"auth/weak-password"});return render()}
+    if(pw!==LV.p2){LERR="দুই পাসওয়ার্ড মিলছে না।";return render()}
+    auth.createUserWithEmailAndPassword(em,pw).catch(lfail);
+  }else auth.signInWithEmailAndPassword(em,pw).catch(lfail);
+}
+function resetPw(){
+  lkeep();if(!LV.e){LERR="আগে ইমেইল লিখুন, তারপর ‘পাসওয়ার্ড ভুলে গেছেন?’ চাপুন।";LMSG="";return render()}
+  auth.sendPasswordResetEmail(LV.e).then(function(){LERR="";LMSG="পাসওয়ার্ড রিসেটের লিংক "+LV.e+" ঠিকানায় পাঠানো হয়েছে। স্প্যাম ফোল্ডারও দেখুন।";render()}).catch(lfail);
+}
+function gin(){LERR="";auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(lfail)}
+function loginScr(){
+  var up=LM==="up",hn=location.hostname||"",ty=SHOW?"text":"password";
+  return '<div class="lg"><div class="logo"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M10 8h6M10 12h6M10 16h3"/></svg></div><h1 style="text-align:center;margin:6px 0">আমার হিসাব</h1><p class="mut" style="text-align:center;margin:0 0 14px">আপনার হিসাব, আপনার নিয়ন্ত্রণে।</p><div class="card">'
+  +'<div class="seg"><button class="'+(up?"":"on")+'" onclick="lm(\'in\')">সাইন-ইন</button><button class="'+(up?"on":"")+'" onclick="lm(\'up\')">নতুন অ্যাকাউন্ট</button></div>'
+  +'<label>ইমেইল</label><input id="le" type="email" autocomplete="email" inputmode="email" value="'+esc(LV.e)+'">'
+  +'<label>পাসওয়ার্ড</label><div class="pw"><input id="lp" type="'+ty+'" autocomplete="'+(up?"new-password":"current-password")+'" value="'+esc(LV.p)+'"><button onclick="lshow()">'+(SHOW?"লুকান":"দেখুন")+'</button></div>'
+  +(up?'<label>পাসওয়ার্ড আবার লিখুন</label><input id="lp2" type="'+ty+'" autocomplete="new-password" value="'+esc(LV.p2)+'">':'')
+  +(LERR?'<div class="err">'+esc(LERR)+'</div>':'')+(LMSG?'<div class="ok">'+esc(LMSG)+'</div>':'')
+  +'<button class="btn" onclick="emailGo()">'+(up?"অ্যাকাউন্ট তৈরি করুন":"সাইন-ইন")+'</button>'
+  +(up?'':'<button class="lk" style="display:block;margin:12px auto 0" onclick="resetPw()">পাসওয়ার্ড ভুলে গেছেন?</button>')
+  +'<div class="dv">অথবা</div><button class="btn o" onclick="gin()">Google দিয়ে সাইন-ইন</button>'
+  +(hn.indexOf("github.io")<0&&hn.indexOf("localhost")<0?'<button class="btn o" onclick="startDemo()">ডেমো দেখুন (লগইন ছাড়া)</button>':'')+'</div></div>';
+}
+function hasPw(){return !!(user&&user.providerData&&user.providerData.some(function(p){return p.providerId==="password"}))}
+function secScr(){
+  var pw=hasPw(),pv=(user.providerData||[]).map(function(p){return p.providerId==="google.com"?"Google":p.providerId==="password"?"ইমেইল-পাসওয়ার্ড":p.providerId}).join(", ");
+  return back()+'<h2>পাসওয়ার্ড ও নিরাপত্তা</h2><div class="card"><div class="mut">ইমেইল: '+esc(user.email||"")+'</div><div class="mut">লগইনের পদ্ধতি: '+esc(pv)+'</div></div><div class="card"><b>'+(pw?"পাসওয়ার্ড বদলান":"পাসওয়ার্ড সেট করুন")+'</b>'+(pw?'':'<p class="mut">পাসওয়ার্ড সেট করলে একই অ্যাকাউন্টে Google ও ইমেইল-পাসওয়ার্ড দুটোতেই ঢুকতে পারবেন। আপনার ডেটা ও অ্যাকাউন্ট বদলাবে না।</p>')
+  +(pw?'<label>বর্তমান পাসওয়ার্ড</label><input id="sp0" type="password" autocomplete="current-password">':'')
+  +'<label>নতুন পাসওয়ার্ড</label><input id="sp1" type="password" autocomplete="new-password"><label>আবার লিখুন</label><input id="sp2" type="password" autocomplete="new-password">'
+  +(SECE?'<div class="err">'+esc(SECE)+'</div>':'')+(SECM?'<div class="ok">'+esc(SECM)+'</div>':'')
+  +'<button class="btn" onclick="setPw()">'+(pw?"পাসওয়ার্ড বদলান":"পাসওয়ার্ড সেট করুন")+'</button></div>';
+}
+function setPw(){
+  var n1=gv("sp1"),n2=gv("sp2"),cur=gv("sp0"),pw=hasPw(),P=firebase.auth.EmailAuthProvider;SECE="";SECM="";
+  if(n1.length<6){SECE=aerr({code:"auth/weak-password"});return render()}
+  if(n1!==n2){SECE="দুই পাসওয়ার্ড মিলছে না।";return render()}
+  function act(){return pw?user.updatePassword(n1):user.linkWithCredential(P.credential(user.email,n1))}
+  var p0=pw?(cur?user.reauthenticateWithCredential(P.credential(user.email,cur)):Promise.reject({code:"auth/invalid-credential"})):Promise.resolve();
+  p0.then(act).catch(function(e){if(!pw&&e&&e.code==="auth/requires-recent-login")return user.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider()).then(act);throw e})
+  .then(function(){SECM=pw?"পাসওয়ার্ড বদলানো হয়েছে।":"পাসওয়ার্ড সেট হয়েছে। এখন Google ও ইমেইল-পাসওয়ার্ড দুটোতেই ঢুকতে পারবেন।";render()})
+  .catch(function(e){SECE=aerr(e);render()});
+}
 function acct(){return cloud&&user?'<div class="card"><b>'+esc(user.displayName||"")+'</b><div class="mut">'+esc(user.email||"")+'</div><div class="mut" id="st">'+st+'</div><button class="btn o" onclick="auth.signOut()">সাইন-আউট</button></div>':!cloud?'<div class="card mut">ক্লাউড চালু নেই, ডেটা শুধু এই ফোনে জমা হচ্ছে।</div>':''}
 function me(){return S.profiles.find(function(p){return p.id===S.cur})}
 function bn(n){return Number(n||0).toLocaleString("bn-BD")}
@@ -119,7 +173,7 @@ function getCats(w,t){var p=me(),k=w+t;if(!p.cats[k])p.cats[k]=DEFC[isOwn(w)?"ow
 function cats(){return getCats(F.w,F.t)}
 function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
 var IC={home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',list:'<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',add:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',cat:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><path d="M7 7h.01"/>',more:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'};
-function nb(t,l){return '<button class="'+(tab===t||(t==="more"&&["set","trash","about","privacy","terms","dm"].indexOf(tab)>=0)?"on":"")+'" onclick="go(\''+t+'\')"><svg viewBox="0 0 24 24">'+IC[t]+'</svg>'+l+'</button>'}
+function nb(t,l){return '<button class="'+(tab===t||(t==="home"&&tab==="tu")||(t==="more"&&["set","trash","about","privacy","terms","dm","sec"].indexOf(tab)>=0)?"on":"")+'" onclick="go(\''+t+'\')"><svg viewBox="0 0 24 24">'+IC[t]+'</svg>'+l+'</button>'}
 function render(){
   var el=document.getElementById("app");
   if(cloud&&!authReady){el.innerHTML='<div class="empty">লোড হচ্ছে…</div>';return}
@@ -128,7 +182,7 @@ function render(){
   fix();
   if(!me()){el.innerHTML=profiles();return}
   var h=(DEMO?'<div class="card" style="background:var(--al)"><b>ডেমো মোড</b> — নমুনা ডেটা, কিছু সংরক্ষিত হয় না। <button class="lk" onclick="location.reload()">বের হোন</button></div>':'')+'<div class="row sp"><h1>'+esc(me().name)+' এর হিসাব</h1></div>';
-  h+=tab==="home"?home():tab==="add"?add():tab==="list"?list():tab==="set"?settings():tab==="trash"?trashScr():tab==="about"?aboutScr():tab==="privacy"?privacyScr():tab==="terms"?termsScr():tab==="dm"?dmScr():more();
+  h+=tab==="home"?home():tab==="add"?add():tab==="list"?list():tab==="set"?settings():tab==="trash"?trashScr():tab==="about"?aboutScr():tab==="privacy"?privacyScr():tab==="terms"?termsScr():tab==="dm"?dmScr():tab==="sec"?secScr():tab==="tu"?tuScr():more();
   h+='<nav><div>'+nb('home','সারসংক্ষেপ')+nb('add','নতুন এন্ট্রি')+nb('list','বিবরণ')+nb('more','অ্যাকাউন্ট')+'</div></nav>';
   el.innerHTML=h;
 }
@@ -178,6 +232,7 @@ function home(){
   if(!es.length)h+='<div class="empty">এ মাসে কোনো এন্ট্রি নেই।</div>';
   h+=brk(es,w,"in",isOwn(w)?"আয় (ক্যাটাগরি অনুযায়ী)":"পাওয়া (ক্যাটাগরি অনুযায়ী)")+brk(es,w,"out","খরচ (ক্যাটাগরি অনুযায়ী)");
   h+='<div class="mut" style="text-align:center;margin:6px 0">এই অবশিষ্ট ৳'+bn(op+inn-out)+' পরের মাসে “পূর্ব মাসের অবশিষ্ট” হিসেবে যোগ হবে।</div>';
+  if(isOwn(w))h+='<button class="btn o" onclick="go(\'tu\')">টিউশন হিসাব দেখুন</button>';
   h+='<div class="card"><b>রিপোর্ট প্রিন্ট</b><button class="btn o" onclick="report(\''+w+'\',\''+month+'\')">'+esc(fname(w))+' — এ মাসের রিপোর্ট</button><button class="btn o" onclick="report(\''+w+'\',0)">'+esc(fname(w))+' — সব সময়ের রিপোর্ট</button><button class="btn o" onclick="reportAll(\''+month+'\')">সব ফান্ড একসাথে — এ মাস</button><button class="btn o" onclick="reportAll(0)">সব ফান্ড একসাথে — সব সময়</button></div>';
   return h;
 }
@@ -191,50 +246,76 @@ function add(){
   var p=me();if(!fund(F.w))F.w=VW;if(cats().indexOf(F.c)<0)F.c=cats()[0];
   var h='<div class="card">'+(EDIT?'<div class="mut" style="color:var(--a)">✎ এন্ট্রি সম্পাদনা করছেন। আগের তথ্য ইতিহাসে জমা থাকবে।</div>':'')+'<label>কোন ফান্ড?</label><div class="cat">'+p.funds.map(function(f){return '<button class="cb'+(f.id===F.w?' on':'')+'" onclick="sf(\'w\',\''+f.id+'\')">'+esc(f.name)+'</button>'}).join("")+'</div>';
   h+='<div class="seg '+(F.t==="out"?"out":"")+'"><button class="'+(F.t==="in"?"on":"")+'" onclick="sf(\'t\',\'in\')">'+(isOwn(F.w)?"আয়":"টাকা পেলাম")+'</button><button class="'+(F.t==="out"?"on":"")+'" onclick="sf(\'t\',\'out\')">খরচ</button></div>';
-  h+=catPick();
+  h+=catPick();h+=tuForm();
   h+='<label>টাকার পরিমাণ</label><input id="fa" type="number" inputmode="decimal" min="0" placeholder="0" value="'+esc(F.a)+'">';
   h+='<label>তারিখ</label><input id="fd" type="date" value="'+F.d+'">';
   h+='<label>বিবরণ (ঐচ্ছিক): কী কিনলেন বা কার কাছ থেকে পেলেন</label><input id="fn" placeholder="যেমন: ১ কেজি আলু" value="'+esc(F.n)+'">';
   return h+'<button class="btn" onclick="submit()">'+(EDIT?"পরিবর্তন সংরক্ষণ করুন":"সংরক্ষণ করুন")+'</button>'+(EDIT?'<button class="btn o" onclick="cancelEdit()">বাতিল</button>':'')+'</div>';
 }
 function sf(k,v){keep();F[k]=v;render()}
-function keep(){var a=document.getElementById("fa");if(a){F.a=a.value;F.d=document.getElementById("fd").value;F.n=document.getElementById("fn").value}}
-function snap(e){return {w:e.w,t:e.t,c:e.c,a:e.a,d:e.d,n:e.n,at:Date.now()}}
+function keep(){var a=document.getElementById("fa");if(a){F.a=a.value;F.d=document.getElementById("fd").value;F.n=document.getElementById("fn").value}var s1=document.getElementById("fs");if(s1){F.s=s1.value;F.sm=+document.getElementById("fsm").value;F.sy=+document.getElementById("fsy").value}}
+function snap(e){return {w:e.w,t:e.t,c:e.c,a:e.a,d:e.d,n:e.n,s:e.s,sm:e.sm,sy:e.sy,at:Date.now()}}
 function findE(id){return me().entries.find(function(x){return x.id===id})}
+var MN=["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+function by(n){return String(n).replace(/\d/g,function(d){return "০১২৩৪৫৬৭৮৯"[d]})}
+function etitle(e){return e.s?e.s+" — "+MN[e.sm-1]+" "+by(e.sy):(e.n||e.c)}
+function edesc(e){return (e.s?e.s+" ("+MN[e.sm-1]+" "+by(e.sy)+")":"")+(e.n?(e.s?" — ":"")+e.n:"")||"—"}
+function tuForm(){
+  if(F.t!=="in"||F.c!=="টিউশন")return "";
+  var names=uniq(me().entries.filter(function(e){return e.s}).map(function(e){return e.s})).sort();
+  return '<div class="card" style="background:var(--gl);margin:12px 0 0"><b>টিউশনের তথ্য</b><label>ছাত্রের নাম</label><input id="fs" list="sl" placeholder="যেমন: রাহাত" value="'+esc(F.s)+'"><datalist id="sl">'+names.map(function(n){return '<option value="'+esc(n)+'">'}).join("")+'</datalist><div class="grid"><div><label>বেতনের মাস</label><select id="fsm">'+MN.map(function(m,i){return '<option value="'+(i+1)+'"'+(F.sm===i+1?' selected':'')+'>'+m+'</option>'}).join("")+'</select></div><div><label>বছর</label><input id="fsy" type="number" inputmode="numeric" value="'+F.sy+'"></div></div><div class="mut" style="margin-top:6px">টাকা পাওয়ার তারিখ নিচের “তারিখ” ঘরে দিন।</div></div>';
+}
 function submit(){
-  keep();var a=parseFloat(F.a);
+  keep();var a=parseFloat(F.a),tu=F.t==="in"&&F.c==="টিউশন";
   if(!(a>0))return alert("সঠিক টাকার পরিমাণ লিখুন");
   if(!F.d)return alert("তারিখ দিন");
-  if(EDIT){var e=findE(EDIT);if(e){if(!e.h)e.h=[];e.h.push(snap(e));e.w=F.w;e.t=F.t;e.c=F.c;e.a=a;e.d=F.d;e.n=F.n.trim()}EDIT=null}
-  else me().entries.push({id:"e"+Date.now(),w:F.w,t:F.t,c:F.c,a:a,d:F.d,n:F.n.trim()});
-  F.a="";F.n="";VW=F.w;save();nav("list");month=F.d.slice(0,7);OPEN=null;render();
+  var s1=(F.s||"").trim(),sm=+F.sm,sy=+F.sy;
+  if(tu){
+    if(!s1)return alert("ছাত্রের নাম লিখুন");
+    if(!(sm>=1&&sm<=12)||!(sy>=2000&&sy<=2100))return alert("বেতনের মাস ও বছর ঠিক করুন");
+    var dup=me().entries.some(function(x){return x.id!==EDIT&&x.c==="টিউশন"&&x.t==="in"&&(x.s||"").toLowerCase()===s1.toLowerCase()&&x.sm===sm&&x.sy===sy});
+    if(dup&&!confirm("“"+s1+"” এর "+MN[sm-1]+" "+by(sy)+" মাসের আরেকটি রেকর্ড আগেই আছে। তবুও যোগ করবেন?"))return;
+  }
+  var p=me(),f={w:F.w,t:F.t,c:F.c,a:a,d:F.d,n:F.n.trim()};
+  if(tu){f.s=s1;f.sm=sm;f.sy=sy}
+  if(EDIT){var e=findE(EDIT);if(e){if(!e.h)e.h=[];e.h.push(snap(e));Object.assign(e,f);if(!tu){delete e.s;delete e.sm;delete e.sy}}EDIT=null}
+  else{f.id="e"+Date.now();p.entries.push(f)}
+  F.a="";F.n="";F.s="";VW=F.w;save();nav("list");month=F.d.slice(0,7);OPEN=null;render();
 }
-function startEdit(id){var e=findE(id);if(!e)return;F={w:e.w,t:e.t,c:e.c,a:String(e.a),d:e.d,n:e.n||""};EDIT=id;nav("add");render();window.scrollTo(0,0)}
+function startEdit(id){var e=findE(id);if(!e)return;F={w:e.w,t:e.t,c:e.c,a:String(e.a),d:e.d,n:e.n||"",s:e.s||"",sm:e.sm||F.sm,sy:e.sy||F.sy};EDIT=id;nav("add");render();window.scrollTo(0,0)}
 function cancelEdit(){EDIT=null;F.a="";F.n="";nav("list");render()}
 function restoreVer(id,i){
   var e=findE(id);if(!e||!e.h||!e.h[i])return;
   if(!confirm("এই আগের তথ্য ফিরিয়ে আনবেন? বর্তমান তথ্যও ইতিহাসে থেকে যাবে।"))return;
   var cur=snap(e),v=e.h.splice(i,1)[0];
-  e.w=v.w;e.t=v.t;e.c=v.c;e.a=v.a;e.d=v.d;e.n=v.n;e.h.push(cur);save();render();
+  e.w=v.w;e.t=v.t;e.c=v.c;e.a=v.a;e.d=v.d;e.n=v.n;e.s=v.s;e.sm=v.sm;e.sy=v.sy;e.h.push(cur);save();render();
 }
 var OPEN=null;
 function tog(id){OPEN=OPEN===id?null:id;render()}
+var FQ={q:"",c:"",t:"",from:"",to:"",all:false},FO=false;
+function fset(){FQ.q=gv("fq").trim();FQ.c=gv("fc");FQ.t=gv("ft");FQ.from=gv("ff");FQ.to=gv("fto");var x=document.getElementById("fall");FQ.all=!!(x&&x.checked);render()}
+function fclr(){FQ={q:"",c:"",t:"",from:"",to:"",all:false};render()}
+function ftog(){FO=!FO;render()}
+function factive(){return !!(FQ.q||FQ.c||FQ.t||FQ.from||FQ.to||FQ.all)}
+function fmatch(e){var q=FQ.q.toLowerCase();if(q&&((e.n||"")+" "+e.c+" "+(e.s||"")+" "+fname(e.w)).toLowerCase().indexOf(q)<0)return false;if(FQ.c&&e.c!==FQ.c)return false;if(FQ.t&&e.t!==FQ.t)return false;if(FQ.from&&e.d<FQ.from)return false;if(FQ.to&&e.d>FQ.to)return false;return true}
 function list(){
-  var all=me().entries,w=VW;
-  var es=all.filter(function(e){return e.w===w&&e.d.slice(0,7)===month}).sort(function(a,b){return b.d.localeCompare(a.d)||b.id.localeCompare(a.id)});
-  var op=bal(all,w,month),inn=sum(es,w,"in"),out=sum(es,w,"out");
-  var h=wtab()+monthBar()+'<div class="card" style="margin-top:10px"><div class="mut" style="margin-bottom:4px">'+(fname(w))+' — বিস্তারিত হিসাব</div>'+stm(op,inn,out,w)+'</div>';
+  var all=me().entries,w=VW,act=factive(),nom=!!(FQ.from||FQ.to||FQ.all);
+  var es=all.filter(function(e){return e.w===w&&(nom||e.d.slice(0,7)===month)&&fmatch(e)}).sort(function(a,b){return b.d.localeCompare(a.d)||b.id.localeCompare(a.id)});
+  var h=wtab()+monthBar()+'<button class="lk" style="margin:8px 0" onclick="ftog()">'+(FO?"▲":"▼")+' সার্চ ও ফিল্টার'+(act?" (চালু)":"")+'</button>';
+  if(FO){
+    var cs=uniq(getCats(w,"in").concat(getCats(w,"out"),all.filter(function(e){return e.w===w}).map(function(e){return e.c})));
+    h+='<div class="card"><label>খুঁজুন (বিবরণ, ছাত্রের নাম, ক্যাটাগরি)</label><input id="fq" value="'+esc(FQ.q)+'" onchange="fset()"><div class="grid"><div><label>ধরন</label><select id="ft" onchange="fset()"><option value="">সব</option><option value="in"'+(FQ.t==="in"?" selected":"")+'>'+(isOwn(w)?"আয়":"প্রাপ্তি")+'</option><option value="out"'+(FQ.t==="out"?" selected":"")+'>খরচ</option></select></div><div><label>ক্যাটাগরি</label><select id="fc" onchange="fset()"><option value="">সব</option>'+cs.map(function(c){return '<option value="'+esc(c)+'"'+(FQ.c===c?" selected":"")+'>'+esc(c)+'</option>'}).join("")+'</select></div></div><div class="grid"><div><label>তারিখ থেকে</label><input id="ff" type="date" value="'+FQ.from+'" onchange="fset()"></div><div><label>তারিখ পর্যন্ত</label><input id="fto" type="date" value="'+FQ.to+'" onchange="fset()"></div></div><label style="display:flex;gap:8px;align-items:center"><input id="fall" type="checkbox" style="width:auto;margin:0"'+(FQ.all?" checked":"")+' onchange="fset()"> সব মাসে খুঁজুন</label><button class="btn o" onclick="fclr()">ফিল্টার পরিষ্কার করুন</button></div>';
+  }
+  if(act){var i2=sum(es,w,"in"),o2=sum(es,w,"out");h+='<div class="card"><b>ফলাফল: '+bn(es.length)+' টি</b><div class="sr"><span>মোট '+(isOwn(w)?"আয়":"প্রাপ্তি")+'</span><b class="in">+৳'+bn(i2)+'</b></div><div class="sr"><span>মোট খরচ</span><b class="ex">−৳'+bn(o2)+'</b></div></div>'}
+  else h+='<div class="card" style="margin-top:10px"><div class="mut" style="margin-bottom:4px">'+esc(fname(w))+' — বিস্তারিত হিসাব</div>'+stm(bal(all,w,month),sum(es,w,"in"),sum(es,w,"out"),w)+'</div>';
   h+='<div class="card">';
-  if(!es.length)h+='<div class="empty">এ মাসে কোনো এন্ট্রি নেই।<br>“নতুন এন্ট্রি” থেকে যোগ করুন।</div>';
+  if(!es.length)h+='<div class="empty">'+(act?"কোনো ফলাফল পাওয়া যায়নি।":"এ মাসে কোনো এন্ট্রি নেই।<br>“নতুন এন্ট্রি” থেকে যোগ করুন।")+'</div>';
   else h+='<div class="mut" style="margin-bottom:4px">এন্ট্রির ওপর চাপলে সম্পাদনা বা মুছার অপশন আসবে</div>';
   es.forEach(function(e){
-    h+='<div class="it" onclick="tog(\''+e.id+'\')"><div class="item" style="border:0"><div><b>'+esc(e.n||e.c)+'</b><div class="mut">'+(e.n?esc(e.c)+" · ":"")+new Date(e.d).toLocaleDateString("bn-BD",{day:"numeric",month:"short"})+(e.h&&e.h.length?" · সম্পাদিত":"")+'</div></div><b class="'+(e.t==="in"?"in":"ex")+'">'+(e.t==="in"?"+":"−")+'৳'+bn(e.a)+'</b></div>';
+    h+='<div class="it" onclick="tog(\''+e.id+'\')"><div class="item" style="border:0"><div><b>'+esc(etitle(e))+'</b><div class="mut">'+(etitle(e)!==e.c?esc(e.c)+" · ":"")+(e.s&&e.n?esc(e.n)+" · ":"")+(nom||act?esc(e.d):new Date(e.d).toLocaleDateString("bn-BD",{day:"numeric",month:"short"}))+(e.h&&e.h.length?" · সম্পাদিত":"")+'</div></div><b class="'+(e.t==="in"?"in":"ex")+'">'+(e.t==="in"?"+":"−")+'৳'+bn(e.a)+'</b></div>';
     if(OPEN===e.id){
       h+='<div class="row" style="margin-bottom:10px"><button class="btn o" style="margin:0" onclick="event.stopPropagation();startEdit(\''+e.id+'\')">✎ সম্পাদনা</button><button class="btn o" style="margin:0;color:var(--r)" onclick="event.stopPropagation();del(\''+e.id+'\')">মুছে ফেলুন</button></div>';
-      if(e.h&&e.h.length){
-        h+='<div class="mut" style="margin-bottom:6px">আগের সংস্করণ:</div>';
-        for(var i=e.h.length-1;i>=0;i--){var v=e.h[i];h+='<div class="row sp" style="margin-bottom:8px"><div class="mut">'+esc(v.n||v.c)+' · ৳'+bn(v.a)+' · '+esc(v.d)+'</div><button class="btn o" style="width:auto;margin:0;padding:6px 10px" onclick="event.stopPropagation();restoreVer(\''+e.id+'\','+i+')">ফিরিয়ে আনুন</button></div>'}
-      }
+      if(e.h&&e.h.length){h+='<div class="mut" style="margin-bottom:6px">আগের সংস্করণ:</div>';for(var i=e.h.length-1;i>=0;i--){var v=e.h[i];h+='<div class="row sp" style="margin-bottom:8px"><div class="mut">'+esc(v.s||v.n||v.c)+' · ৳'+bn(v.a)+' · '+esc(v.d)+'</div><button class="btn o" style="width:auto;margin:0;padding:6px 10px" onclick="event.stopPropagation();restoreVer(\''+e.id+'\','+i+')">ফিরিয়ে আনুন</button></div>'}}
     }
     h+='</div>';
   });
@@ -275,7 +356,7 @@ function more(){
   h+='<h2>প্রোফাইল</h2><div class="card">';
   S.profiles.forEach(function(q){var c=q.id===S.cur;h+='<button class="pf" onclick="pick(\''+q.id+'\')"><b>'+esc(q.name)+'</b><span class="'+(c?"in":"mut")+'">'+(c?"✓ চলমান":"সুইচ করুন")+'</span></button>'});
   h+='<label>নতুন প্রোফাইল</label><input id="pn" placeholder="নাম"><button class="btn" onclick="addProf()">প্রোফাইল যোগ করুন</button><div class="row"><button class="btn o" onclick="renProf()">নাম বদলান</button><button class="btn o" style="color:var(--r)" onclick="delProf()">মুছুন</button></div></div>';
-  h+='<h2>অ্যাকাউন্ট</h2><div class="card">'+mi("set","সেটিংস","ফান্ড, ক্যাটাগরি ও কাস্টমাইজেশন")+mi("trash","সম্প্রতি মুছে ফেলা ("+bn(p.trash.length)+")","৭ দিন পর স্থায়ীভাবে মুছে যায়")+mi("about","About","অ্যাপের পরিচিতি ও উদ্দেশ্য")+mi("privacy","গোপনীয়তা নীতি","Privacy Policy")+mi("terms","ব্যবহারের শর্তাবলি","Terms & Conditions")+mi("dm","ডাটা ব্যবস্থাপনা","পুরোনো ডাটা মুছুন")+'<a class="pf" style="text-decoration:none;color:inherit" href="mailto:mr.abdurrahman.jami@gmail.com"><b>Support</b><span class="mut">ইমেইল করুন</span></a><button class="pf" disabled style="opacity:.55"><b>পাসওয়ার্ড ও নিরাপত্তা</b><span class="mut">শীঘ্রই আসছে</span></button></div>';
+  h+='<h2>অ্যাকাউন্ট</h2><div class="card">'+mi("set","সেটিংস","ফান্ড, ক্যাটাগরি ও কাস্টমাইজেশন")+mi("trash","সম্প্রতি মুছে ফেলা ("+bn(p.trash.length)+")","৭ দিন পর স্থায়ীভাবে মুছে যায়")+mi("about","About","অ্যাপের পরিচিতি ও উদ্দেশ্য")+mi("privacy","গোপনীয়তা নীতি","Privacy Policy")+mi("terms","ব্যবহারের শর্তাবলি","Terms & Conditions")+mi("dm","ডাটা ব্যবস্থাপনা","পুরোনো ডাটা মুছুন")+'<a class="pf" style="text-decoration:none;color:inherit" href="mailto:mr.abdurrahman.jami@gmail.com"><b>Support</b><span class="mut">ইমেইল করুন</span></a>'+(cloud&&user?mi("sec","পাসওয়ার্ড ও নিরাপত্তা","পাসওয়ার্ড সেট/বদলান"):'<button class="pf" disabled style="opacity:.55"><b>পাসওয়ার্ড ও নিরাপত্তা</b><span class="mut">সাইন-ইন করা থাকলে</span></button>')+'</div>';
   h+='<h2>ব্যাকআপ</h2><div class="card">'+bkInfo()+'<button class="btn" onclick="bkAll()">সব ফান্ডের ব্যাকআপ</button>'+p.funds.map(function(f){return '<button class="btn o" onclick="bkFund(\''+f.id+'\')">শুধু “'+esc(f.name)+'” এর ব্যাকআপ</button>'}).join("")+'<label>ব্যাকআপ ফাইল ফেরত আনুন (আগের ডেটা মুছবে না, যা নেই শুধু তা যোগ হবে)</label><input type="file" accept=".json" onchange="imp(this)"></div>';
   return h;
 }
@@ -310,7 +391,7 @@ function aboutScr(){
   ["আমাদের সুবিধাসমূহ",["একাধিক ফান্ড তৈরি ও পরিচালনা।","আয়-ব্যয়ের হিসাব এবং ক্যাটাগরি ব্যবস্থাপনা।","ফান্ডভিত্তিক হিসাব সংরক্ষণ।","ব্যাকআপ ও ডেটা পুনরুদ্ধারের সুবিধা।","ভুল করে মুছে ফেলা তথ্য পুনরুদ্ধারের ব্যবস্থা।","সহজ সেটিংস ও কাস্টমাইজেশন।","দ্রুত ও স্বাচ্ছন্দ্যপূর্ণ ব্যবহার অভিজ্ঞতা।"]],
   ["তথ্যের নিরাপত্তা","ব্যবহারকারীর তথ্য, গোপনীয়তা ও নিরাপত্তাকে আমরা সর্বোচ্চ গুরুত্ব দিই। তথ্যের অননুমোদিত ব্যবহার ও প্রবেশ ঠেকাতে উপযুক্ত নিরাপত্তাব্যবস্থা বজায় রাখা এবং উন্নত করাই আমাদের অঙ্গীকার।"],
   ["ডেভেলপার","AR Development & Technology"],
-  ["অ্যাপের তথ্য",["অ্যাপের নাম: আমার হিসাব","ভার্সন: 1.0.6","সাপোর্ট ইমেইল: "+EM]],
+  ["অ্যাপের তথ্য",["অ্যাপের নাম: আমার হিসাব","ভার্সন: 1.0.7","সাপোর্ট ইমেইল: "+EM]],
   ["","আপনার আস্থা ও সহযোগিতার জন্য ধন্যবাদ। আপনার হিসাব হোক আরও সহজ, গোছানো ও নিয়ন্ত্রিত।"]
   ])+mi("privacy","গোপনীয়তা নীতি","Privacy Policy")+mi("terms","ব্যবহারের শর্তাবলি","Terms & Conditions");
 }
@@ -328,7 +409,7 @@ function privacyScr(){
   ]);
 }
 function termsScr(){
-  return doc("ব্যবহারের শর্তাবলি (Terms & Conditions)","অ্যাপের নাম: আমার হিসাব · ডেভেলপার: AR Development & Technology · ভার্সন: 1.0.6",[
+  return doc("ব্যবহারের শর্তাবলি (Terms & Conditions)","অ্যাপের নাম: আমার হিসাব · ডেভেলপার: AR Development & Technology · ভার্সন: 1.0.7",[
   ["১. শর্তাবলিতে সম্মতি","আমার হিসাব অ্যাপ ব্যবহার করার মাধ্যমে ব্যবহারকারী এই শর্তাবলি মেনে চলতে সম্মত হন। শর্তাবলিতে সম্মত না হলে অ্যাপ ব্যবহার বন্ধ রাখতে পারেন।"],
   ["২. অ্যাপের ব্যবহার","অ্যাপটি ব্যক্তিগত হিসাব, আয়-ব্যয়, সঞ্চয় এবং ফান্ড ব্যবস্থাপনার সহায়ক হিসেবে তৈরি করা হয়েছে। ব্যবহারকারীকে নিজের তথ্য সঠিকভাবে সংরক্ষণ ও পরিচালনা করতে হবে।"],
   ["৩. ব্যবহারকারীর তথ্য","ব্যবহারকারীর সংরক্ষিত হিসাবের সঠিকতা যাচাই করার দায়িত্ব ব্যবহারকারীর। অ্যাপটি হিসাব পরিচালনার সুবিধা দেয়; এটি কোনো ব্যাংক, আর্থিক প্রতিষ্ঠান বা পেশাদার আর্থিক পরামর্শদাতার বিকল্প নয়।"],
@@ -341,6 +422,26 @@ function termsScr(){
   ["১০. শর্তাবলির পরিবর্তন","প্রয়োজন অনুযায়ী এই শর্তাবলি হালনাগাদ করা হতে পারে। গুরুত্বপূর্ণ পরিবর্তনের ক্ষেত্রে ব্যবহারকারীদের জানানো হবে।"],
   ["১১. যোগাযোগ","শর্তাবলি বা অ্যাপের সেবা সম্পর্কে প্রশ্ন থাকলে যোগাযোগ করুন:","AR Development & Technology","ইমেইল: "+EM]
   ]);
+}
+var TQ={s:"",y:"",m:""};
+function tuAll(){return me().entries.filter(function(e){return e.t==="in"&&e.c==="টিউশন"&&isOwn(e.w)})}
+function tq(){TQ.s=gv("tqs");TQ.y=gv("tqy");TQ.m=gv("tqm");render()}
+function tuNew(){var f=me().funds.find(function(x){return x.type==="own"});if(!f)return alert("আগে একটি ব্যক্তিগত ধরনের ফান্ড তৈরি করুন");VW=f.id;F.w=f.id;F.t="in";F.c="টিউশন";F.s="";go("add")}
+function tuScr(){
+  var all=tuAll(),names=uniq(all.map(function(e){return e.s||"(নাম নেই)"})).sort(),yrs=uniq(all.map(function(e){return String(e.sy||e.d.slice(0,4))})).sort().reverse();
+  var es=all.filter(function(e){return (!TQ.s||(e.s||"(নাম নেই)")===TQ.s)&&(!TQ.y||String(e.sy||e.d.slice(0,4))===TQ.y)&&(!TQ.m||String(e.sm||"")===TQ.m)});
+  var h=back()+'<h2>টিউশন হিসাব</h2><button class="btn" onclick="tuNew()" style="margin-top:0">＋ নতুন টিউশন রেকর্ড</button><div class="card"><div class="grid"><div><label>ছাত্র</label><select id="tqs" onchange="tq()"><option value="">সব</option>'+names.map(function(n){return '<option value="'+esc(n)+'"'+(TQ.s===n?" selected":"")+'>'+esc(n)+'</option>'}).join("")+'</select></div><div><label>বছর</label><select id="tqy" onchange="tq()"><option value="">সব</option>'+yrs.map(function(y){return '<option value="'+y+'"'+(TQ.y===y?" selected":"")+'>'+by(y)+'</option>'}).join("")+'</select></div></div><label>মাস</label><select id="tqm" onchange="tq()"><option value="">সব</option>'+MN.map(function(m,i){return '<option value="'+(i+1)+'"'+(TQ.m===String(i+1)?" selected":"")+'>'+m+'</option>'}).join("")+'</select></div>';
+  var tot=es.reduce(function(x,e){return x+e.a},0);
+  h+='<div class="card"><div class="sr"><span>রেকর্ড</span><b>'+bn(es.length)+' টি</b></div><div class="sr"><span>মোট প্রাপ্তি</span><b class="in">৳'+bn(tot)+'</b></div></div>';
+  if(!es.length)return h+'<div class="empty">'+(all.length?"কোনো ফলাফল পাওয়া যায়নি।":"এখনো কোনো টিউশনের রেকর্ড নেই।")+'</div>';
+  var g={};es.forEach(function(e){(g[e.s||"(নাম নেই)"]=g[e.s||"(নাম নেই)"]||[]).push(e)});
+  Object.keys(g).sort().forEach(function(n){
+    var a=g[n].sort(function(x,y){return ((y.sy||0)*100+(y.sm||0))-((x.sy||0)*100+(x.sm||0))||y.d.localeCompare(x.d)}),t=a.reduce(function(x,e){return x+e.a},0);
+    h+='<div class="card"><div class="row sp"><b>'+esc(n)+'</b><b class="in">৳'+bn(t)+'</b></div>'+a.map(function(e){
+      return '<div class="it" onclick="tog(\''+e.id+'\')"><div class="item" style="border:0"><div><b>'+(e.sm?MN[e.sm-1]+" "+by(e.sy):"মাস অজানা")+'</b><div class="mut">পেয়েছি: '+esc(e.d)+(e.n?" · "+esc(e.n):"")+'</div></div><b class="in">৳'+bn(e.a)+'</b></div>'
+      +(OPEN===e.id?'<div class="row" style="margin-bottom:10px"><button class="btn o" style="margin:0" onclick="event.stopPropagation();startEdit(\''+e.id+'\')">✎ সম্পাদনা</button><button class="btn o" style="margin:0;color:var(--r)" onclick="event.stopPropagation();del(\''+e.id+'\')">মুছে ফেলুন</button></div>':'')+'</div>'}).join("")+'</div>';
+  });
+  return h;
 }
 function bkLeft(){return 2-(S.meta.bk[today().slice(0,7)]||0)}
 function bkInfo(){return '<p class="mut">এ মাসে ব্যাকআপ নেওয়া বাকি: '+bn(bkLeft())+'/২ (সব ধরনের ব্যাকআপ মিলিয়ে)</p>'}
@@ -429,7 +530,7 @@ function fundSec(f,per){
   [["in",own?"আয়":"প্রাপ্তি"],["out","খরচ"]].forEach(function(g){
     var t=g[0],cs={},tot=0;es.filter(function(e){return e.t===t}).forEach(function(e){(cs[e.c]=cs[e.c]||[]).push(e)});
     var ks=Object.keys(cs);
-    ks.forEach(function(k){var sub=0;h+='<table><caption>'+g[1]+' — '+esc(k)+'</caption><tr><th style="width:26%">তারিখ</th><th>বিবরণ</th><th style="width:28%">টাকা</th></tr>'+cs[k].map(function(e){sub+=e.a;return '<tr><td>'+esc(e.d)+'</td><td>'+esc(e.n||"—")+'</td><td class="r">৳'+bn(e.a)+'</td></tr>'}).join("")+'<tr class="tot"><td colspan="2">'+esc(k)+' এর মোট</td><td class="r">৳'+bn(sub)+'</td></tr></table>';tot+=sub});
+    ks.forEach(function(k){var sub=0;h+='<table><caption>'+g[1]+' — '+esc(k)+'</caption><tr><th style="width:26%">তারিখ</th><th>বিবরণ</th><th style="width:28%">টাকা</th></tr>'+cs[k].map(function(e){sub+=e.a;return '<tr><td>'+esc(e.d)+'</td><td>'+esc(edesc(e))+'</td><td class="r">৳'+bn(e.a)+'</td></tr>'}).join("")+'<tr class="tot"><td colspan="2">'+esc(k)+' এর মোট</td><td class="r">৳'+bn(sub)+'</td></tr></table>';tot+=sub});
     if(!ks.length)h+='<p>'+g[1]+': কোনো এন্ট্রি নেই।</p>';
     if(t==="in")tin=tot;else tout=tot;
   });
@@ -465,6 +566,7 @@ function startDemo(){
     {id:"d14",w:"x1",t:"in",c:"দান",a:3000,d:m+"-04",n:"মসজিদ ফান্ডে দান",h:[{w:"x1",t:"in",c:"দান",a:300,d:m+"-04",n:"ভুল পরিমাণ",at:1}]}],
     funds:[{id:"p",name:"ব্যক্তিগত",type:"own"},{id:"f",name:"প্রতিষ্ঠান ফান্ড",type:"trust"},{id:"x1",name:"মসজিদ ফান্ড",type:"trust"}],cats:{},
     trash:[{id:"t1",at:Date.now()-2*864e5,k:"e",e:E(99,"p","out","পরিবার",150,m+"-02","ভুল এন্ট্রি")}]}]};
+  var te=S.profiles[0].entries;te[1].s="রাহাত";te[1].sm=+pm.slice(5);te[1].sy=+pm.slice(0,4);te[1].c="টিউশন";te.push({id:"d20",w:"p",t:"in",c:"টিউশন",a:3500,d:m+"-08",n:"",s:"সাবিহা",sm:mo,sy:y},{id:"d21",w:"p",t:"in",c:"টিউশন",a:4000,d:m+"-09",n:"",s:"রাহাত",sm:mo,sy:y});
   VW="p";tab="home";render();
 }
 var armed=false;
